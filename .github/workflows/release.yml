@@ -28,7 +28,6 @@ jobs:
         run: |
           mkdir -p releases
           cp curve-editor/zig-out/bin/curve_editor.exe releases/curve_editor-windows-x64.exe
-          cp curve-editor/zig-out/bin/curve_editor releases/curve_editor-linux-x64
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
