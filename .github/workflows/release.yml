@@ -37,6 +37,10 @@ jobs:
           cd curve-editor
           zig build -Dtarget=x86_64-windows -Doptimize=ReleaseSmall
 
+      - name: Fix library paths for Zig
+        run: |
+          sudo ln -s /usr/lib/x86_64-linux-gnu/* /usr/lib/
+
       - name: Build for Linux x64
         run: |
           cd curve-editor
