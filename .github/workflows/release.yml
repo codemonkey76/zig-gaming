@@ -19,28 +19,10 @@ jobs:
         with:
           version: 0.15.2
 
-      - name: Install Linux dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libx11-dev \
-            libxrandr-dev \
-            libxcursor-dev \
-            libxi-dev \
-            libxinerama-dev \
-            libxext-dev \
-            libxfixes-dev \
-            libgl1-mesa-dev
-
       - name: Build for Windows x64
         run: |
           cd curve-editor
           zig build -Dtarget=x86_64-windows -Doptimize=ReleaseSmall
-
-      - name: Build for Linux x64
-        run: |
-          cd curve-editor
-          zig build -Dtarget=x86_64-linux -Doptimize=ReleaseSmall --search-prefix /usr/lib/x86_64-linux-gnu
 
       - name: Package binaries
         run: |
