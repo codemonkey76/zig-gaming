@@ -1,0 +1,19 @@
+.{
+    .name = .curve_editor,
+    .version = "0.0.0",
+    .fingerprint = 0xeacc0e448aac2ef4, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.15.2",
+    .dependencies = .{
+        .renderer = .{
+            .path = "../renderer",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        // For example...
+        //"LICENSE",
+        //"README.md",
+    },
+}
