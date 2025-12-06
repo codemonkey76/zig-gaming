@@ -40,9 +40,7 @@ jobs:
       - name: Build for Linux x64
         run: |
           cd curve-editor
-          zig build -Dtarget=x86_64-linux -Doptimize=ReleaseSmall \
-            --sysroot /usr \
-            -Dsystem-library-dir=/usr/lib/x86_64-linux-gnu zig build -Dtarget=x86_64-linux -Doptimize=ReleaseSmall --search-prefix /usr
+          zig build -Dtarget=x86_64-linux -Doptimize=ReleaseSmall --search-prefix /usr/lib/x86_64-linux-gnu
 
       - name: Package binaries
         run: |
