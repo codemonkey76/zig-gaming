@@ -12,4 +12,5 @@ pub const RenderConfig = struct {
     show_viewport_border: bool = true,
     letterbox_color: Color = Color.dark_gray,
     viewport_border: Color = Color.green,
+    ssaa_scale: f32 = 2.0,
 };

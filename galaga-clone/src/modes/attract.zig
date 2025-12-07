@@ -1,15 +1,25 @@
 const std = @import("std");
 const Input = @import("renderer").types.Input;
 const Color = @import("renderer").types.Color;
+const Font = @import("renderer").types.Font;
+
+const TextGrid = @import("renderer").TextGrid;
 
 const TRANSITION_DELAY = 5.0;
+const FONT_SIZE = 16.0;
 
 pub const Attract = struct {
     timer: f32,
 
     pub fn init(allocator: std.mem.Allocator) @This() {
         _ = allocator;
-        return .{ .timer = 0 };
+        return .{
+            .timer = 0,
+        };
+    }
+
+    pub fn deinit(self: *@This()) void {
+        _ = self;
     }
 
     pub fn update(self: *@This(), dt: f32, input: Input) void {
@@ -20,8 +30,13 @@ pub const Attract = struct {
         return self.timer > TRANSITION_DELAY;
     }
 
-    pub fn draw(self: *const @This(), renderer: anytype) void {
+    pub fn draw(self: *const @This(), renderer: anytype, text_grid: *const TextGrid) void {
         _ = self;
-        renderer.drawText("Attract Mode", .{ .x = 10, .y = 10 }, 24, Color.white);
+        _ = renderer;
+        _ = text_grid;
+    }
+    pub fn drawDebug(self: *const @This(), renderer: anytype) void {
+        _ = self;
+        renderer.drawText("Attract Mode", .{ .x = 10, .y = 10 }, 24, Color.white, null);
     }
 };

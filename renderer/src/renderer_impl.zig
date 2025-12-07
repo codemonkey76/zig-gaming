@@ -10,6 +10,9 @@ const Input = types.Input;
 const Color = types.Color;
 const Vec2 = types.Vec2;
 const RendererConfig = @import("config.zig").RenderConfig;
+const AssetManager = @import("asset_manager.zig").AssetManager;
+const Font = @import("types.zig").Font;
+const TextGrid = @import("text_grid.zig").TextGrid;
 
 pub const Renderer = struct {
     viewport: Viewport,
@@ -18,8 +21,12 @@ pub const Renderer = struct {
     input_manager: InputManager,
     config: RendererConfig,
     allocator: std.mem.Allocator,
+    asset_manager: AssetManager,
+    render_target: rl.RenderTexture2D,
+    render_width: f32,
+    render_height: f32,
 
-    pub fn init(allocator: std.mem.Allocator, config: RendererConfig) @This() {
+    pub fn init(allocator: std.mem.Allocator, config: RendererConfig) !@This() {
         rl.setTraceLogLevel(rl.TraceLogLevel.none);
         rl.setConfigFlags(rl.ConfigFlags{ .window_resizable = true });
         rl.initWindow(config.initial_width, config.initial_height, config.title);
@@ -29,7 +36,15 @@ pub const Renderer = struct {
         const height = rl.getScreenHeight();
 
         var input_manager = InputManager.init(allocator);
+        errdefer input_manager.deinit();
         input_manager.registerKey(Key.f11);
+
+        const render_width = config.game_width * config.ssaa_scale;
+        const render_height = config.game_height * config.ssaa_scale;
+        const render_target = try rl.loadRenderTexture(
+            @intFromFloat(render_width),
+            @intFromFloat(render_height),
+        );
 
         return .{
             .viewport = Viewport.fromScreenSize(width, height, config.game_width, config.game_height, config.margin_percent),
@@ -38,6 +53,10 @@ pub const Renderer = struct {
             .input_manager = input_manager,
             .config = config,
             .allocator = allocator,
+            .asset_manager = AssetManager.init(allocator),
+            .render_target = render_target,
+            .render_width = render_width,
+            .render_height = render_height,
         };
     }
 
@@ -47,6 +66,8 @@ pub const Renderer = struct {
 
     pub fn deinit(self: *@This()) void {
         self.input_manager.deinit();
+        self.asset_manager.deinit();
+        rl.unloadRenderTexture(self.render_target);
         rl.closeWindow();
     }
 
@@ -66,17 +87,39 @@ pub const Renderer = struct {
 
         rl.beginDrawing();
         rl.clearBackground(self.config.letterbox_color);
-        rl.drawRectangleRec(self.viewport.rect, rl.Color.black);
-        if (self.config.show_viewport_border) {
-            rl.drawRectangleLinesEx(self.viewport.rect, 2.0, self.config.viewport_border);
-        }
-        if (self.config.show_fps) {
-            rl.drawFPS(current_width - 100, 10);
-        }
+
+        rl.beginTextureMode(self.render_target);
+        rl.clearBackground(rl.Color.black);
     }
 
     pub fn end(_: *const @This()) void {
         rl.endDrawing();
+    }
+
+    pub fn endRenderTarget(self: *const @This()) void {
+        rl.endTextureMode();
+
+        const source = rl.Rectangle{
+            .x = 0,
+            .y = 0,
+            .width = self.render_width,
+            .height = -self.render_height,
+        };
+
+        rl.drawTexturePro(
+            self.render_target.texture,
+            source,
+            self.viewport.rect,
+            rl.Vector2{ .x = 0, .y = 0 },
+            0.0,
+            rl.Color.white,
+        );
+        if (self.config.show_viewport_border) {
+            rl.drawRectangleLinesEx(self.viewport.rect, 2.0, self.config.viewport_border);
+        }
+        if (self.config.show_fps) {
+            rl.drawFPS(self.last_width - 100, 10);
+        }
     }
 
     pub fn getDelta(_: *const @This()) f32 {
@@ -106,7 +149,11 @@ pub const Renderer = struct {
         rl.drawLineV(startPoint, endPoint, color);
     }
 
-    pub fn drawText(_: *const @This(), text: [:0]const u8, pos: Vec2, font_size: i32, color: Color) void {
-        rl.drawText(text, @intFromFloat(pos.x), @intFromFloat(pos.y), font_size, color);
+    pub fn drawText(_: *const @This(), text: [:0]const u8, pos: Vec2, font_size: i32, color: Color, font: ?Font) void {
+        if (font) |f| {
+            rl.drawTextEx(f, text, .{ .x = pos.x, .y = pos.y }, @floatFromInt(font_size), 1.0, color);
+        } else {
+            rl.drawText(text, @intFromFloat(pos.x), @intFromFloat(pos.y), font_size, color);
+        }
     }
 };

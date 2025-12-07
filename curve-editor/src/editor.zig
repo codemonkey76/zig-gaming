@@ -207,8 +207,6 @@ pub const Editor = struct {
                 bezier_draw.drawControlPoint(r, norm_point, POINT_RADIUS, color, Color.white);
             }
         }
-
-        self.drawUI(r);
     }
 
     fn getPointColor(self: *const @This(), b_idx: usize, p_idx: usize, is_active: bool) Color {
@@ -220,12 +218,13 @@ pub const Editor = struct {
         return if (is_active) Color.red else types.dark_red;
     }
 
-    fn drawUI(self: *const @This(), r: anytype) void {
+    pub fn drawUi(self: *const @This(), r: anytype) void {
         r.drawText(
             "Click: Add | Drag: Move | Right: Remove | E: Export | Enter: New Bezier",
             Vec2{ .x = 10, .y = 10 },
             16,
             Color.white,
+            null,
         );
 
         if (self.active_bezier_index) |active_idx| {
@@ -235,7 +234,7 @@ pub const Editor = struct {
                 self.beziers.items[active_idx].pointCount(),
             }) catch return;
 
-            r.drawText(info_text, Vec2{ .x = 10, .y = 30 }, 16, Color.orange);
+            r.drawText(info_text, Vec2{ .x = 10, .y = 30 }, 16, Color.orange, null);
         }
     }
 

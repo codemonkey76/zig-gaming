@@ -4,7 +4,7 @@ const Renderer = @import("renderer").Renderer;
 
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
-    var r = Renderer.init(allocator, .{
+    var r = try Renderer.init(allocator, .{
         .title = "Bezier Curve Editor",
     });
     defer r.deinit();
@@ -20,15 +20,18 @@ pub fn main() !void {
     while (!r.shouldQuit()) {
         const dt = r.getDelta();
         const input = r.getInput();
+        r.handleGlobalInput(input);
 
         editor.update(dt, input, r.viewport);
-        r.handleGlobalInput(input);
 
         {
             r.begin();
             defer r.end();
 
             editor.draw(&r);
+
+            r.endRenderTarget();
+            editor.drawUi(&r);
         }
     }
 }

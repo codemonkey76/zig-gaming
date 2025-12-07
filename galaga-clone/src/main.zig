@@ -5,9 +5,9 @@ const RendererConfig = renderer.RendererConfig;
 const Color = renderer.types.Color;
 const Game = @import("game.zig").Game;
 
-pub fn main() void {
+pub fn main() !void {
     const allocator = std.heap.page_allocator;
-    var r = Renderer.init(allocator, .{
+    var r = try Renderer.init(allocator, .{
         .title = "Galaga Clone",
         .margin_percent = 0.0,
         .letterbox_color = Color.dark_gray,
@@ -16,7 +16,7 @@ pub fn main() void {
     });
     defer r.deinit();
 
-    var game = Game.init(allocator, &r);
+    var game = try Game.init(allocator, &r);
     defer game.deinit();
 
     while (!r.shouldQuit()) {
@@ -31,6 +31,8 @@ pub fn main() void {
             defer r.end();
 
             game.draw();
+            r.endRenderTarget();
+            game.drawDebug();
         }
     }
 }

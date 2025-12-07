@@ -54,7 +54,12 @@ pub const Viewport = struct {
             .y = self.rect.y + norm_pos.y * self.rect.height,
         };
     }
-
+    pub fn toViewportCoords(self: *const Viewport, pos: Vec2) Vec2 {
+        return .{
+            .x = self.rect.x + pos.x,
+            .y = self.rect.y + pos.y,
+        };
+    }
     pub fn contains(self: *const @This(), screen_pos: Vec2) bool {
         return screen_pos.x >= self.rect.x and
             screen_pos.x <= self.rect.x + self.rect.width and
