@@ -28,6 +28,8 @@ pub const Game = struct {
     starfield: Starfield,
     scores_hud: ScoresHud,
 
+    parallax_phase: f32,
+
     pub fn init(allocator: std.mem.Allocator, renderer: *Renderer) !@This() {
         try loadAssetsStatic(renderer);
 
@@ -45,6 +47,7 @@ pub const Game = struct {
             .high_score = HighScoreMode.init(allocator),
             .scores_hud = ScoresHud.init(),
             .starfield = try Starfield.init(allocator, renderer.viewport.rect, .{}),
+            .parallax_phase = 0.0,
         };
 
         game.registerHandlers();
@@ -60,6 +63,9 @@ pub const Game = struct {
     }
 
     pub fn update(self: *@This(), dt: f32, input: Input) void {
+        const osc_speed: f32 = 0.5;
+        self.parallax_phase += dt * (osc_speed * 2.0 * std.math.pi);
+
         self.starfield.update(dt);
         switch (self.current_mode) {
             .attract => {
@@ -93,7 +99,7 @@ pub const Game = struct {
 
     fn drawGlobal(self: *const @This()) void {
         self.scores_hud.draw(self.renderer, &self.text_grid);
-        self.starfield.draw(self.renderer);
+        self.starfield.draw(self.renderer, std.math.sin(self.parallax_phase));
     }
 
     fn registerHandlers(self: *@This()) void {

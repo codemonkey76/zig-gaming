@@ -25,6 +25,7 @@ pub const StarfieldConfig = struct {
     size: u32 = 1,
     twinkle_chance: f32 = 0.3,
     shoot_chance: f32 = 0.06,
+    parallax_strength: f32 = 20.0,
 };
 
 pub const Starfield = struct {
@@ -208,19 +209,34 @@ pub const Starfield = struct {
             .can_twinkle = can_twinkle,
         };
     }
-    pub fn draw(self: *const @This(), r: anytype) void {
+    pub fn draw(self: *const @This(), r: anytype, parallax: f32) void {
         const radius: f32 = @floatFromInt(self.cfg.size);
+        var px = parallax;
+        if (px < -1.0) px = -1.0;
+        if (px > 1.0) px = 1.0;
 
         var i: usize = 0;
         while (i < self.active_stars) : (i += 1) {
             const star = self.stars[i];
             if (!star.visible) continue;
 
-            const pos = Vec2{ .x = star.x, .y = star.y };
+            // Depth factor: faster starrs parallax more
+            const base_speed = if (self.cfg.shoot_speed > self.cfg.speed)
+                self.cfg.shoot_speed
+            else
+                self.cfg.speed;
+
+            const depth = if (base_speed > 0)
+                star.speed / base_speed
+            else
+                1.0;
+
+            const offset_x = px * self.cfg.parallax_strength * depth;
+
+            const pos = Vec2{ .x = star.x + offset_x, .y = star.y };
 
             if (star.is_shooting) {
-                // Small vertical streak
-                const tail = Vec2{ .x = star.x, .y = star.y - 6.0 };
+                const tail = Vec2{ .x = star.x + offset_x, .y = star.y - 6.0 };
                 r.drawLine(tail, pos, star.color);
             } else {
                 r.drawCircle(pos, radius, star.color);
