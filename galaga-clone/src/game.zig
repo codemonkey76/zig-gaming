@@ -11,8 +11,11 @@ const HighScoreMode = @import("modes/high_score.zig").HighScore;
 const ScoresHud = @import("scores_hud.zig").ScoresHud;
 const Font = r.types.Font;
 const TextGrid = @import("renderer").TextGrid;
+const Starfield = @import("starfield.zig").Starfield;
+const StarfieldConfig = @import("starfield.zig").StarfieldConfig;
 
 pub const FONT_SIZE: i32 = 18;
+pub const MAX_STARS: u32 = 100;
 
 pub const Game = struct {
     allocator: std.mem.Allocator,
@@ -22,6 +25,7 @@ pub const Game = struct {
     attract: AttractMode,
     playing: PlayingMode,
     high_score: HighScoreMode,
+    starfield: Starfield,
     scores_hud: ScoresHud,
 
     pub fn init(allocator: std.mem.Allocator, renderer: *Renderer) !@This() {
@@ -40,6 +44,7 @@ pub const Game = struct {
             .playing = PlayingMode.init(allocator),
             .high_score = HighScoreMode.init(allocator),
             .scores_hud = ScoresHud.init(),
+            .starfield = try Starfield.init(allocator, renderer.viewport.rect, .{}),
         };
 
         game.registerHandlers();
@@ -55,6 +60,7 @@ pub const Game = struct {
     }
 
     pub fn update(self: *@This(), dt: f32, input: Input) void {
+        self.starfield.update(dt);
         switch (self.current_mode) {
             .attract => {
                 self.attract.update(dt, input);
@@ -87,6 +93,7 @@ pub const Game = struct {
 
     fn drawGlobal(self: *const @This()) void {
         self.scores_hud.draw(self.renderer, &self.text_grid);
+        self.starfield.draw(self.renderer);
     }
 
     fn registerHandlers(self: *@This()) void {
