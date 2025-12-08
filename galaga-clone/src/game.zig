@@ -17,6 +17,9 @@ const Rect = r.types.Rect;
 const FormationGrid = @import("formation_grid.zig").FormationGrid;
 const Color = r.types.Color;
 const Vec2 = r.types.Vec2;
+const SpriteAtlas = @import("sprite.zig").SpriteAtlas;
+const Texture = r.types.Texture;
+const SpriteType = @import("sprite.zig").SpriteType;
 
 pub const FONT_SIZE: i32 = 18;
 pub const MAX_STARS: u32 = 100;
@@ -37,10 +40,13 @@ pub const Game = struct {
     formation_grid: FormationGrid,
     formation_phase: f32,
 
+    sprite_atlas: SpriteAtlas,
+
     pub fn init(allocator: std.mem.Allocator, renderer: *Renderer) !@This() {
         try loadAssetsStatic(renderer);
 
         const font = renderer.asset_manager.getAsset(Font, "main") orelse return error.FontNotLoaded;
+        try renderer.asset_manager.loadAsset(Texture, "sprites", "assets/sprites/sprites.png");
 
         const text_grid = TextGrid.init(renderer.render_width, renderer.render_height, font, FONT_SIZE);
 
@@ -65,30 +71,39 @@ pub const Game = struct {
             .y = spacing_y,
         };
 
+        var attract_mode = AttractMode.init(allocator);
+        errdefer attract_mode.deinit();
+
+        var playing_mode = PlayingMode.init(allocator);
+        errdefer playing_mode.deinit();
+
+        var high_score_mode = HighScoreMode.init(allocator);
+        errdefer high_score_mode.deinit();
+
+        var starfield = try Starfield.init(allocator, starfield_rect, .{});
+        errdefer starfield.deinit();
+
+        const sprite_atlas = try SpriteAtlas.init();
+
         var game = Game{
             .allocator = allocator,
             .renderer = renderer,
             .text_grid = text_grid,
             .current_mode = .attract,
-            .attract = AttractMode.init(allocator),
-            .playing = PlayingMode.init(allocator),
-            .high_score = HighScoreMode.init(allocator),
+            .attract = attract_mode,
+            .playing = playing_mode,
+            .high_score = high_score_mode,
             .scores_hud = ScoresHud.init(),
-            .starfield = try Starfield.init(allocator, starfield_rect, .{}),
+            .starfield = starfield,
             .parallax_phase = 0.0,
 
             // NEW
             .formation_grid = FormationGrid.init(formation_center, 8, 5, formation_spacing),
             .formation_phase = 0.0,
+            .sprite_atlas = sprite_atlas,
         };
 
         game.registerHandlers();
-        errdefer {
-            game.attract.deinit();
-            game.playing.deinit();
-            game.high_score.deinit();
-            game.starfield.deinit();
-        }
         return game;
     }
     pub fn deinit(self: *@This()) void {
@@ -96,6 +111,24 @@ pub const Game = struct {
         self.attract.deinit();
         self.playing.deinit();
         self.high_score.deinit();
+    }
+
+    pub fn drawPlayer(self: *const @This()) void {
+        const tex = self.renderer.asset_manager.getAsset(Texture, "sprites") orelse return;
+        const sprite = self.sprite_atlas.getSprite(.player);
+        if (sprite.idle_count == 0) return;
+
+        const frame = sprite.idle_frames[0];
+
+        const scale = self.renderer.config.ssaa_scale;
+        const sprite_h = frame.height * scale;
+
+        const center = Vec2{
+            .x = self.renderer.render_width / 2.0,
+            .y = self.renderer.render_height - sprite_h / 2.0,
+        };
+
+        self.renderer.drawSprite(tex, frame, center, Color.white);
     }
 
     pub fn update(self: *@This(), dt: f32, input: Input) void {
@@ -138,6 +171,7 @@ pub const Game = struct {
     }
 
     fn drawGlobal(self: *const @This()) void {
+        self.drawPlayer();
         self.scores_hud.draw(self.renderer, &self.text_grid);
         self.starfield.draw(self.renderer, std.math.sin(self.parallax_phase));
 
