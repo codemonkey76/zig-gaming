@@ -149,6 +149,13 @@ pub const Renderer = struct {
         rl.drawLineV(startPoint, endPoint, color);
     }
 
+    pub fn normToRender(self: *const @This(), norm: Vec2) Vec2 {
+        return .{
+            .x = norm.x * self.render_width,
+            .y = norm.y * self.render_height,
+        };
+    }
+
     pub fn drawText(_: *const @This(), text: [:0]const u8, pos: Vec2, font_size: i32, color: Color, font: ?Font) void {
         if (font) |f| {
             rl.drawTextEx(f, text, .{ .x = pos.x, .y = pos.y }, @floatFromInt(font_size), 1.0, color);

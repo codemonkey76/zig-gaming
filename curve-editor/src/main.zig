@@ -31,6 +31,7 @@ pub fn main() !void {
             editor.draw(&r);
 
             r.endRenderTarget();
+            editor.drawOverlayHandles(&r);
             editor.drawUi(&r);
         }
     }

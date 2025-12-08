@@ -19,8 +19,8 @@ pub fn drawBezierCurve(
         const norm_p1 = bezier.evaluate(t1);
         const norm_p2 = bezier.evaluate(t2);
 
-        const p1 = renderer.viewport.toScreen(norm_p1);
-        const p2 = renderer.viewport.toScreen(norm_p2);
+        const p1 = renderer.normToRender(norm_p1);
+        const p2 = renderer.normToRender(norm_p2);
 
         renderer.drawLine(p1, p2, color);
     }
@@ -35,8 +35,8 @@ pub fn drawControlPolygon(
     if (points.len < 2) return;
 
     for (0..points.len - 1) |j| {
-        const p1 = renderer.viewport.toScreen(points[j]);
-        const p2 = renderer.viewport.toScreen(points[j + 1]);
+        const p1 = renderer.normToRender(points[j]);
+        const p2 = renderer.normToRender(points[j + 1]);
         renderer.drawLine(p1, p2, color);
     }
 }
@@ -49,7 +49,7 @@ pub fn drawControlPoint(
     color: Color,
     border_color: Color,
 ) void {
-    const screen_point = renderer.viewport.toScreen(norm_point);
+    const screen_point = renderer.normToRender(norm_point);
     renderer.drawCircle(screen_point, radius, color);
     renderer.drawCircle(screen_point, radius - 2, border_color);
 }

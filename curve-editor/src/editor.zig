@@ -77,6 +77,21 @@ pub const Editor = struct {
         self.drag_point = null;
     }
 
+    pub fn drawOverlayHandles(self: *const @This(), r: anytype) void {
+        const vp = r.viewport;
+
+        for (self.beziers.items, 0..) |bezier, b_idx| {
+            const is_active = if (self.active_bezier_index) |active| active == b_idx else false;
+
+            for (bezier.points.items, 0..) |norm_point, p_idx| {
+                const screen_pos = vp.toScreen(norm_point);
+                const color = self.getPointColor(b_idx, p_idx, is_active);
+
+                r.drawCircle(screen_pos, POINT_RADIUS, color);
+                r.drawCircle(screen_pos, POINT_RADIUS - 2, Color.white);
+            }
+        }
+    }
     fn handleLeftMouseButton(self: *@This(), input: Input, norm_mouse: Vec2) void {
         if (!input.isMouseButtonPressed(MouseButton.left)) return;
 
