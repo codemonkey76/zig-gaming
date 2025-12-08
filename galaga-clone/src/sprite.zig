@@ -5,7 +5,9 @@ const std = @import("std");
 
 pub const SpriteType = enum {
     player,
+    player_alt,
     boss,
+    boss_alt,
     goei,
     zako,
     scorpion,
@@ -16,9 +18,20 @@ pub const SpriteType = enum {
     enterprise,
 };
 
+pub const Flip = enum {
+    none,
+    x,
+    y,
+    both,
+};
+
 pub const MAX_IDLE_FRAMES: usize = 4;
 pub const MAX_ROT_FRAMES: usize = 6;
-pub const SpriteFrame = Rect;
+pub const SpriteFrame = struct {
+    src: Rect,
+    flip: Flip = .none,
+};
+
 pub const Sprite = struct {
     type: SpriteType,
 
@@ -44,26 +57,86 @@ pub const SpriteAtlas = struct {
             sprites.set(tag, emptySprite(tag));
         }
 
-        const player_idle_src = [_]SpriteFrame{
-            .{ .x = 6 * (16 + 2) + 1, .y = 1, .width = 16, .height = 16 },
-        };
-
-        const player_rot_src = [_]SpriteFrame{
-            .{ .x = 0, .y = 0, .width = 16, .height = 16 },
-        };
-
         sprites.set(
             .player,
-            try createSprite(
-                .player,
-                &player_idle_src,
-                &player_rot_src,
-            ),
+            try createSprite(.player, &[_]SpriteFrame{
+                cell(6, 0),
+            }, &[_]SpriteFrame{
+                cell(0, 0),
+                cell(1, 0),
+                cell(2, 0),
+                cell(3, 0),
+                cell(4, 0),
+                cell(5, 0),
+            }),
         );
 
+        sprites.set(
+            .player_alt,
+            try createSprite(.player_alt, &[_]SpriteFrame{
+                cell(6, 1),
+            }, &[_]SpriteFrame{
+                cell(0, 1),
+                cell(1, 1),
+                cell(2, 1),
+                cell(3, 1),
+                cell(4, 1),
+                cell(5, 1),
+            }),
+        );
+
+        sprites.set(
+            .boss,
+            try createSprite(.boss, &[_]SpriteFrame{
+                cell(6, 2),
+                cell(7, 2),
+            }, &[_]SpriteFrame{
+                cell(0, 2),
+                cell(1, 2),
+                cell(2, 2),
+                cell(3, 2),
+                cell(4, 2),
+                cell(5, 2),
+            }),
+        );
+
+        sprites.set(
+            .boss_alt,
+            try createSprite(.boss, &[_]SpriteFrame{
+                cell(6, 3),
+                cell(7, 3),
+            }, &[_]SpriteFrame{
+                cell(0, 3),
+                cell(1, 3),
+                cell(2, 3),
+                cell(3, 3),
+                cell(4, 3),
+                cell(5, 3),
+            }),
+        );
         return .{
             .sprites = sprites,
         };
+    }
+
+    const TILE = 16;
+    const SPACING = 2;
+    const OFFSET = 1;
+
+    fn cell(x: usize, y: usize) SpriteFrame {
+        return .{
+            .x = col(x),
+            .y = row(y),
+            .width = TILE,
+            .height = TILE,
+        };
+    }
+
+    fn col(x: usize) f32 {
+        return @as(f32, @floatFromInt(x * (TILE + SPACING) + OFFSET));
+    }
+    fn row(y: usize) f32 {
+        return @as(f32, @floatFromInt(y * (TILE + SPACING) + OFFSET));
     }
 
     fn emptySprite(t: SpriteType) Sprite {
