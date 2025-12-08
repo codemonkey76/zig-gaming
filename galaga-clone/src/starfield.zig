@@ -72,11 +72,6 @@ pub const Starfield = struct {
 
         const t = self.rand01();
 
-        // Weighted colour distribution:
-        // 60% soft blue-white
-        // 25% pale yellow-white
-        // 10% reddish
-        // 5% pure white
         if (t < 0.60) {
             // blue-ish white
             return Color{
