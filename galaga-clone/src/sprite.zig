@@ -45,7 +45,7 @@ pub const SpriteAtlas = struct {
         }
 
         const player_idle_src = [_]SpriteFrame{
-            .{ .x = 0, .y = 0, .width = 16, .height = 16 },
+            .{ .x = 6 * (16 + 2) + 1, .y = 1, .width = 16, .height = 16 },
         };
 
         const player_rot_src = [_]SpriteFrame{
