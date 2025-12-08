@@ -13,6 +13,10 @@ const Font = r.types.Font;
 const TextGrid = @import("renderer").TextGrid;
 const Starfield = @import("starfield.zig").Starfield;
 const StarfieldConfig = @import("starfield.zig").StarfieldConfig;
+const Rect = r.types.Rect;
+const FormationGrid = @import("formation_grid.zig").FormationGrid;
+const Color = r.types.Color;
+const Vec2 = r.types.Vec2;
 
 pub const FONT_SIZE: i32 = 18;
 pub const MAX_STARS: u32 = 100;
@@ -30,12 +34,36 @@ pub const Game = struct {
 
     parallax_phase: f32,
 
+    formation_grid: FormationGrid,
+    formation_phase: f32,
+
     pub fn init(allocator: std.mem.Allocator, renderer: *Renderer) !@This() {
         try loadAssetsStatic(renderer);
 
         const font = renderer.asset_manager.getAsset(Font, "main") orelse return error.FontNotLoaded;
 
         const text_grid = TextGrid.init(renderer.render_width, renderer.render_height, font, FONT_SIZE);
+
+        const starfield_rect = Rect{
+            .x = 0,
+            .y = 0,
+            .width = renderer.render_width,
+            .height = renderer.render_height,
+        };
+
+        const sprite_size: f32 = 16.0 * renderer.config.ssaa_scale;
+        const spacing_x = sprite_size * 1.8;
+        const spacing_y = sprite_size * 1.4;
+
+        const formation_center = Vec2{
+            .x = renderer.render_width / 2.0,
+            .y = renderer.render_height * 0.30,
+        };
+
+        const formation_spacing = Vec2{
+            .x = spacing_x,
+            .y = spacing_y,
+        };
 
         var game = Game{
             .allocator = allocator,
@@ -46,8 +74,12 @@ pub const Game = struct {
             .playing = PlayingMode.init(allocator),
             .high_score = HighScoreMode.init(allocator),
             .scores_hud = ScoresHud.init(),
-            .starfield = try Starfield.init(allocator, renderer.viewport.rect, .{}),
+            .starfield = try Starfield.init(allocator, starfield_rect, .{}),
             .parallax_phase = 0.0,
+
+            // NEW
+            .formation_grid = FormationGrid.init(formation_center, 8, 5, formation_spacing),
+            .formation_phase = 0.0,
         };
 
         game.registerHandlers();
@@ -55,16 +87,24 @@ pub const Game = struct {
             game.attract.deinit();
             game.playing.deinit();
             game.high_score.deinit();
+            game.starfield.deinit();
         }
         return game;
     }
     pub fn deinit(self: *@This()) void {
-        _ = self;
+        self.starfield.deinit();
+        self.attract.deinit();
+        self.playing.deinit();
+        self.high_score.deinit();
     }
 
     pub fn update(self: *@This(), dt: f32, input: Input) void {
         const osc_speed: f32 = 0.5;
         self.parallax_phase += dt * (osc_speed * 2.0 * std.math.pi);
+
+        // ~0.5 Hz breathing for the formation
+        const formation_speed: f32 = 0.25;
+        self.formation_phase += dt * (formation_speed * 2.0 * std.math.pi);
 
         self.starfield.update(dt);
         switch (self.current_mode) {
@@ -100,6 +140,20 @@ pub const Game = struct {
     fn drawGlobal(self: *const @This()) void {
         self.scores_hud.draw(self.renderer, &self.text_grid);
         self.starfield.draw(self.renderer, std.math.sin(self.parallax_phase));
+
+        // -- Formation debug visualization
+        const base: f32 = 1.0;
+        const amp: f32 = 0.08;
+        const pulse = base + amp * std.math.sin(self.formation_phase);
+
+        var row: u32 = 0;
+        while (row < self.formation_grid.rows) : (row += 1) {
+            var col: u32 = 0;
+            while (col < self.formation_grid.cols) : (col += 1) {
+                const pos = self.formation_grid.getPosition(col, row, pulse);
+                self.renderer.drawCircle(pos, 3.0, Color.green);
+            }
+        }
     }
 
     fn registerHandlers(self: *@This()) void {
