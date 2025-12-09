@@ -26,7 +26,7 @@ pub const Renderer = struct {
     render_width: f32,
     render_height: f32,
 
-    pub fn init(allocator: std.mem.Allocator, config: RendererConfig) !@This() {
+    pub fn init(allocator: std.mem.Allocator, config: RendererConfig) !Renderer {
         rl.setTraceLogLevel(rl.TraceLogLevel.none);
         rl.setConfigFlags(rl.ConfigFlags{ .window_resizable = true });
         rl.initWindow(config.initial_width, config.initial_height, config.title);
@@ -60,22 +60,22 @@ pub const Renderer = struct {
         };
     }
 
-    pub fn registerInput(self: *@This(), register_fn: fn (*InputManager) void) void {
+    pub fn registerInput(self: *Renderer, register_fn: fn (*InputManager) void) void {
         register_fn(&self.input_manager);
     }
 
-    pub fn deinit(self: *@This()) void {
+    pub fn deinit(self: *Renderer) void {
         self.input_manager.deinit();
         self.asset_manager.deinit();
         rl.unloadRenderTexture(self.render_target);
         rl.closeWindow();
     }
 
-    pub fn shouldQuit(_: *const @This()) bool {
+    pub fn shouldQuit(_: *const Renderer) bool {
         return rl.windowShouldClose();
     }
 
-    pub fn begin(self: *@This()) void {
+    pub fn begin(self: *Renderer) void {
         const current_width = rl.getScreenWidth();
         const current_height = rl.getScreenHeight();
 
@@ -92,11 +92,11 @@ pub const Renderer = struct {
         rl.clearBackground(rl.Color.black);
     }
 
-    pub fn end(_: *const @This()) void {
+    pub fn end(_: *const Renderer) void {
         rl.endDrawing();
     }
 
-    pub fn endRenderTarget(self: *const @This()) void {
+    pub fn endRenderTarget(self: *const Renderer) void {
         rl.endTextureMode();
 
         const source = rl.Rectangle{
@@ -122,26 +122,26 @@ pub const Renderer = struct {
         }
     }
 
-    pub fn getDelta(_: *const @This()) f32 {
+    pub fn getDelta(_: *const Renderer) f32 {
         return rl.getFrameTime();
     }
 
-    pub fn getInput(self: *const @This()) Input {
+    pub fn getInput(self: *const Renderer) Input {
         return self.input_manager.poll();
     }
 
-    pub fn handleGlobalInput(_: *const @This(), input: Input) void {
+    pub fn handleGlobalInput(_: *const Renderer, input: *Input) void {
         if (input.isKeyPressed(Key.f11)) {
             rl.toggleBorderlessWindowed();
         }
     }
 
-    pub fn drawCircle(_: *const @This(), center: Vec2, radius: f32, color: Color) void {
+    pub fn drawCircle(_: *const Renderer, center: Vec2, radius: f32, color: Color) void {
         rl.drawCircleV(center, radius, color);
     }
 
     pub fn drawLine(
-        _: *const @This(),
+        _: *const Renderer,
         startPoint: Vec2,
         endPoint: Vec2,
         color: Color,
@@ -149,14 +149,14 @@ pub const Renderer = struct {
         rl.drawLineV(startPoint, endPoint, color);
     }
 
-    pub fn normToRender(self: *const @This(), norm: Vec2) Vec2 {
+    pub fn normToRender(self: *const Renderer, norm: Vec2) Vec2 {
         return .{
             .x = norm.x * self.render_width,
             .y = norm.y * self.render_height,
         };
     }
 
-    pub fn drawText(_: *const @This(), text: [:0]const u8, pos: Vec2, font_size: i32, color: Color, font: ?Font) void {
+    pub fn drawText(_: *const Renderer, text: [:0]const u8, pos: Vec2, font_size: i32, color: Color, font: ?Font) void {
         if (font) |f| {
             rl.drawTextEx(f, text, .{ .x = pos.x, .y = pos.y }, @floatFromInt(font_size), 1.0, color);
         } else {
@@ -165,7 +165,7 @@ pub const Renderer = struct {
     }
 
     pub fn drawSprite(
-        self: *const @This(),
+        self: *const Renderer,
         texture: rl.Texture,
         src: rl.Rectangle,
         center: Vec2,

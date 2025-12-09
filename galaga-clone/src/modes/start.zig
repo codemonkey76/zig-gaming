@@ -7,17 +7,65 @@ const Vec2 = @import("renderer").types.Vec2;
 const cyan = @import("renderer").types.cyan;
 const Sprite = @import("../sprite.zig").Sprite;
 const SpriteFrame = @import("../sprite.zig").SpriteFrame;
+const MutableGameContext = @import("../game.zig").MutableGameContext;
+const GameContext = @import("../game.zig").GameContext;
+const Key = @import("renderer").types.Key;
+const common = @import("common.zig");
+const std = @import("std");
 
 pub const Start = struct {
+    pub const keys = [_]Key{ .one, .two };
+    start_requested: bool = false,
+
     pub fn init() @This() {
         return .{};
     }
-    pub fn update(self: *@This(), dt: f32, input: Input) void {
-        _ = self;
-        _ = dt;
-        _ = input;
+
+    pub fn onEnter(self: *@This(), ctx: MutableGameContext) void {
+        self.start_requested = false;
+        common.registerKeys(ctx, &keys);
+        std.debug.print("Start mode: Entered\n", .{});
     }
-    pub fn draw(self: *const @This(), ctx: anytype) void {
+
+    pub fn onExit(self: *@This(), ctx: MutableGameContext) void {
+        self.start_requested = false;
+        common.unregisterKeys(ctx, &keys);
+        std.debug.print("Start mode: Exited\n", .{});
+    }
+
+    pub fn update(self: *@This(), dt: f32, input: *Input, ctx: MutableGameContext) void {
+        _ = dt;
+
+        if (input.isKeyPressed(.one)) {
+            if (ctx.game_state.credits >= 1) {
+                ctx.game_state.credits -= 1;
+                ctx.game_state.current_player = 1;
+                ctx.game_state.num_players = 1;
+                self.start_requested = true;
+                std.debug.print("1P Start! Credits remaining: {d}\n", .{ctx.game_state.credits});
+            } else {
+                std.debug.print("Not enough credits for 1P game (need 1, have {d})\n", .{ctx.game_state.credits});
+            }
+        }
+        if (input.isKeyPressed(.two)) {
+            if (ctx.game_state.credits >= 2) {
+                ctx.game_state.credits -= 2;
+                ctx.game_state.current_player = 1;
+                ctx.game_state.num_players = 2;
+                self.start_requested = true;
+                std.debug.print("2P Start! Credits remaining: {d}\n", .{ctx.game_state.credits});
+            } else {
+                std.debug.print("Not enough credits for 2P game (need 2, have {d})\n", .{ctx.game_state.credits});
+            }
+        }
+    }
+
+    pub fn shouldTransition(self: *const @This()) bool {
+        return self.start_requested;
+    }
+
+    pub fn drawDebug(_: *const @This(), _: GameContext) void {}
+    pub fn draw(self: *const @This(), ctx: GameContext) void {
         const arcade_font = ctx.renderer.asset_manager.getAsset(Font, "main");
         const tex = ctx.renderer.asset_manager.getAsset(Texture, "sprites") orelse return;
         const sprite: Sprite = ctx.sprite_atlas.getSprite(.player);

@@ -1,65 +1,63 @@
 const std = @import("std");
-
 const r = @import("renderer");
-const InputManager = r.InputManager;
+
 const Renderer = r.Renderer;
-const Key = r.types.Key;
+const InputManager = r.InputManager;
+const TextGrid = r.TextGrid;
+const FormationGrid = r.FormationGrid;
+
 const Input = r.types.Input;
+const Key = r.types.Key;
+const Font = r.types.Font;
+const Texture = r.types.Texture;
+const Color = r.types.Color;
+const Vec2 = r.types.Vec2;
+const Rect = r.types.Rect;
+
 const AttractMode = @import("modes/attract.zig").Attract;
 const PlayingMode = @import("modes/playing.zig").Playing;
 const HighScoreMode = @import("modes/high_score.zig").HighScore;
+const StartMode = @import("modes/start.zig").Start;
+
 const ScoresHud = @import("scores_hud.zig").ScoresHud;
-const Font = r.types.Font;
-const TextGrid = @import("renderer").TextGrid;
 const Starfield = @import("starfield.zig").Starfield;
-const StarfieldConfig = @import("starfield.zig").StarfieldConfig;
-const Rect = r.types.Rect;
-const FormationGrid = @import("renderer").FormationGrid;
-const Color = r.types.Color;
-const Vec2 = r.types.Vec2;
 const SpriteAtlas = @import("sprite.zig").SpriteAtlas;
-const Texture = r.types.Texture;
 const SpriteType = @import("sprite.zig").SpriteType;
 
 pub const FONT_SIZE: i32 = 18;
-pub const MAX_STARS: u32 = 100;
 
 pub const Game = struct {
     allocator: std.mem.Allocator,
     renderer: *Renderer,
+
+    // UI
     text_grid: TextGrid,
+    scores_hud: ScoresHud,
+    starfield: Starfield,
+
+    // Game State
     current_mode: GameMode,
+    game_state: GameState,
+
+    // Modes
     attract: AttractMode,
     playing: PlayingMode,
     high_score: HighScoreMode,
-    starfield: Starfield,
-    scores_hud: ScoresHud,
+    start: StartMode,
 
+    // Assets
     formation_grid: FormationGrid,
     sprite_atlas: SpriteAtlas,
-    game_state: GameState,
 
-    pub fn init(allocator: std.mem.Allocator, renderer: *Renderer) !@This() {
-        try loadAssetsStatic(renderer);
+    pub fn init(allocator: std.mem.Allocator, renderer: *Renderer) !Game {
+        try loadAssets(renderer);
 
         const font = renderer.asset_manager.getAsset(Font, "main") orelse return error.FontNotLoaded;
-        try renderer.asset_manager.loadAsset(Texture, "sprites", "assets/sprites/sprites.png");
 
         const text_grid = TextGrid.init(renderer.render_width, renderer.render_height, font, FONT_SIZE);
 
-        const sprite_size: f32 = 16.0 * renderer.config.ssaa_scale;
-        const spacing_x = sprite_size * 1.8;
-        const spacing_y = sprite_size * 1.4;
-
-        const formation_center = Vec2{
-            .x = renderer.render_width / 2.0,
-            .y = renderer.render_height * 0.30,
-        };
-
-        const formation_spacing = Vec2{
-            .x = spacing_x,
-            .y = spacing_y,
-        };
+        const formation_grid = initFormationGrid(renderer);
+        const sprite_atlas = try SpriteAtlas.init();
 
         var attract_mode = AttractMode.init(allocator);
         errdefer attract_mode.deinit();
@@ -70,154 +68,225 @@ pub const Game = struct {
         var high_score_mode = HighScoreMode.init(allocator);
         errdefer high_score_mode.deinit();
 
-        var starfield = try Starfield.init(allocator, renderer.render_width, renderer.render_height, .{});
-        errdefer starfield.deinit();
+        const start_mode = StartMode.init();
 
-        const sprite_atlas = try SpriteAtlas.init();
+        var starfield = try Starfield.init(
+            allocator,
+            renderer.render_width,
+            renderer.render_height,
+            .{},
+        );
+        errdefer starfield.deinit();
 
         var game = Game{
             .allocator = allocator,
             .renderer = renderer,
             .text_grid = text_grid,
+            .scores_hud = ScoresHud.init(),
+            .starfield = starfield,
             .current_mode = .attract,
+            .game_state = .{},
             .attract = attract_mode,
             .playing = playing_mode,
             .high_score = high_score_mode,
-            .scores_hud = ScoresHud.init(),
-            .starfield = starfield,
-            .formation_grid = FormationGrid.init(formation_center, 10, 5, formation_spacing, 40),
+            .start = start_mode,
+            .formation_grid = formation_grid,
             .sprite_atlas = sprite_atlas,
-            .game_state = .{},
         };
 
         game.registerHandlers();
+
+        const ctx = game.getMutableContext();
+        attract_mode.onEnter(ctx);
+
         return game;
     }
-    pub fn deinit(self: *@This()) void {
+    pub fn deinit(self: *Game) void {
+        const ctx = self.getMutableContext();
+
+        switch (self.current_mode) {
+            .attract => self.attract.onExit(ctx),
+            .start => self.start.onExit(ctx),
+            .playing => self.playing.onExit(ctx),
+            .high_score => self.high_score.onExit(ctx),
+        }
+
         self.starfield.deinit();
         self.attract.deinit();
         self.playing.deinit();
         self.high_score.deinit();
     }
 
-    pub fn drawPlayer(self: *const @This()) void {
-        const tex = self.renderer.asset_manager.getAsset(Texture, "sprites") orelse return;
-        const sprite = self.sprite_atlas.getSprite(.player);
-        if (sprite.idle_count == 0) return;
-
-        const frame = sprite.idle_frames[0];
-
-        const scale = self.renderer.config.ssaa_scale;
-        const sprite_h = frame.height * scale;
-
-        const center = Vec2{
-            .x = self.renderer.render_width / 2.0,
-            .y = self.renderer.render_height - sprite_h / 2.0,
-        };
-
-        self.renderer.drawSprite(tex, frame, center, Color.white);
-    }
-
-    pub fn update(self: *@This(), dt: f32, input: Input) void {
-        const ctx = self.getContext();
+    pub fn update(self: *Game, dt: f32, input: *Input) void {
+        self.handleInput(input);
+        const ctx = self.getMutableContext();
         self.starfield.update(dt, ctx);
+
         switch (self.current_mode) {
             .attract => {
-                self.attract.update(dt, input);
+                self.attract.update(dt, input, ctx);
                 if (self.attract.shouldTransition()) {
-                    std.debug.print("Attract mode timed out, switching to playing mode\n", .{});
-                    self.current_mode = .playing;
+                    self.current_mode = .attract; // Loop attract mode
                 }
             },
-            .playing => self.playing.update(dt, input),
-            .high_score => self.high_score.update(dt, input),
+            .start => {
+                self.start.update(dt, input, ctx);
+                if (self.start.shouldTransition()) {
+                    self.transitionTo(.playing);
+                }
+            },
+            .playing => {
+                self.playing.update(dt, input, ctx);
+                if (self.playing.shouldTransition()) {
+                    self.transitionTo(.high_score);
+                }
+            },
+            .high_score => {
+                self.high_score.update(dt, input, ctx);
+                if (self.high_score.shouldTransition()) {
+                    self.transitionTo(.attract);
+                }
+            },
         }
     }
-    fn getContext(self: *@This()) GameContext {
-        return GameContext{
-            .renderer = self.renderer,
-            .text_grid = @constCast(&self.text_grid),
-            .formation_grid = @constCast(&self.formation_grid),
-            .sprite_atlas = @constCast(&self.sprite_atlas),
-            .game_state = &self.game_state,
-        };
-    }
 
-    pub fn draw(self: *const @This()) void {
+    pub fn draw(self: *const Game) void {
         const ctx = self.getContext();
+
         self.drawGlobal(ctx);
         switch (self.current_mode) {
             .attract => self.attract.draw(ctx),
+            .start => self.start.draw(ctx),
             .playing => self.playing.draw(ctx),
             .high_score => self.high_score.draw(ctx),
         }
     }
 
-    pub fn drawDebug(self: *const @This(), ctx: GameContext) void {
+    pub fn drawDebug(self: *const Game) void {
+        const ctx = self.getContext();
+
         switch (self.current_mode) {
             .attract => self.attract.drawDebug(ctx),
+            .start => self.start.drawDebug(ctx),
             .playing => self.playing.drawDebug(ctx),
             .high_score => self.high_score.drawDebug(ctx),
         }
     }
 
-    fn drawGlobal(self: *const @This(), ctx: GameContext) void {
-        self.drawPlayer();
-        self.scores_hud.draw(ctx);
-        self.starfield.draw(ctx);
-        self.drawFormationEnemies();
-    }
+    fn transitionTo(self: *Game, new_mode: GameMode) void {
+        if (self.current_mode == new_mode) return;
 
-    fn drawFormationEnemies(self: *const @This()) void {
-        const tex = self.renderer.asset_manager.getAsset(Texture, "sprites") orelse return;
+        const ctx = self.getMutableContext();
 
-        const base: f32 = 1.0;
-        const amp: f32 = 0.08;
-        const pulse = base + amp * std.math.sin(self.formation_phase);
+        switch (self.current_mode) {
+            .attract => self.attract.onExit(ctx),
+            .start => self.start.onExit(ctx),
+            .playing => self.playing.onExit(ctx),
+            .high_score => self.high_score.onExit(ctx),
+        }
 
-        var row: u32 = 0;
-        while (row < self.formation_grid.rows) : (row += 1) {
-            var col: u32 = 0;
-            while (col < self.formation_grid.cols) : (col += 1) {
-                const pos = self.formation_grid.getPosition(col, row, pulse);
+        self.current_mode = new_mode;
 
-                const sprite_type: SpriteType = if (row < 2) .boss else .goei;
-
-                const sprite = self.sprite_atlas.getSprite(sprite_type);
-                if (sprite.idle_count == 0) continue;
-
-                const idx = self.formation_idle_frame_index % sprite.idle_count;
-                const frame = sprite.idle_frames[idx];
-
-                self.renderer.drawSprite(tex, frame, pos, Color.white);
-            }
+        switch (new_mode) {
+            .attract => self.attract.onEnter(ctx),
+            .start => self.start.onEnter(ctx),
+            .playing => self.playing.onEnter(ctx),
+            .high_score => self.high_score.onEnter(ctx),
         }
     }
 
-    fn registerHandlers(self: *@This()) void {
-        self.renderer.input_manager.registerKey(Key.left);
-        self.renderer.input_manager.registerKey(Key.right);
+    fn getContext(self: *const Game) GameContext {
+        return .{
+            .renderer = @constCast(self.renderer),
+            .text_grid = &self.text_grid,
+            .formation_grid = &self.formation_grid,
+            .sprite_atlas = &self.sprite_atlas,
+            .game_state = &self.game_state,
+        };
     }
 
-    fn loadAssetsStatic(renderer: *Renderer) !void {
+    fn getMutableContext(self: *Game) MutableGameContext {
+        return .{
+            .renderer = self.renderer,
+            .text_grid = &self.text_grid,
+            .formation_grid = &self.formation_grid,
+            .sprite_atlas = &self.sprite_atlas,
+            .game_state = &self.game_state,
+        };
+    }
+
+    fn drawGlobal(self: *const Game, ctx: GameContext) void {
+        self.scores_hud.draw(ctx);
+        self.starfield.draw(ctx);
+    }
+
+    fn handleInput(self: *Game, input: *Input) void {
+        if (input.isKeyPressed(.five)) {
+            self.insertCoin();
+        }
+    }
+
+    fn insertCoin(self: *Game) void {
+        self.game_state.credits += 1;
+        std.debug.print("Coin inserted, credits: {}\n", .{self.game_state.credits});
+
+        if (self.current_mode == .attract and self.game_state.credits > 0) {
+            self.transitionTo(.start);
+        }
+    }
+
+    fn registerHandlers(self: *Game) void {
+        self.renderer.input_manager.registerKey(Key.one);
+        self.renderer.input_manager.registerKey(Key.two);
+        self.renderer.input_manager.registerKey(Key.five);
+    }
+
+    fn loadAssets(renderer: *Renderer) !void {
         try renderer.asset_manager.loadFont("main", "assets/fonts/arcade.ttf", FONT_SIZE);
+        try renderer.asset_manager.loadAsset(Texture, "sprites", "assets/sprites/sprites.png");
+    }
+
+    fn initFormationGrid(renderer: *Renderer) FormationGrid {
+        const sprite_size: f32 = 16.0 * renderer.config.ssaa_scale;
+        const spacing = Vec2{
+            .x = sprite_size * 1.8,
+            .y = sprite_size * 1.4,
+        };
+        const center = Vec2{
+            .x = renderer.render_width / 2.0,
+            .y = renderer.render_height * 0.30,
+        };
+
+        return FormationGrid.init(center, 10, 5, spacing, 40);
     }
 };
 
 pub const GameMode = enum {
     attract,
+    start,
     playing,
     high_score,
 };
 
 pub const GameState = struct {
     parallax_phase: f32 = 0.0,
+    credits: u32 = 0,
+    num_players: u8 = 0,
+    current_player: u8 = 0,
 };
 
 pub const GameContext = struct {
-    renderer: *Renderer,
+    renderer: *const Renderer,
     text_grid: *const TextGrid,
-    formation_grid: *FormationGrid,
+    formation_grid: *const FormationGrid,
     sprite_atlas: *const SpriteAtlas,
+    game_state: *const GameState,
+};
+
+pub const MutableGameContext = struct {
+    renderer: *Renderer,
+    text_grid: *TextGrid,
+    formation_grid: *FormationGrid,
+    sprite_atlas: *SpriteAtlas,
     game_state: *GameState,
 };

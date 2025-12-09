@@ -60,7 +60,7 @@ pub const AssetManager = struct {
         }
     }
 
-    pub fn getAsset(self: *@This(), comptime T: type, name: []const u8) ?T {
+    pub fn getAsset(self: *const @This(), comptime T: type, name: []const u8) ?T {
         if (T == Texture) {
             return self.textures.get(name);
         } else if (T == Sound) {
@@ -77,7 +77,7 @@ pub const AssetManager = struct {
         try self.fonts.put(name, font);
     }
 
-    pub fn playSound(self: *@This(), name: []const u8) void {
+    pub fn playSound(self: *const @This(), name: []const u8) void {
         if (self.sounds.get(name)) |sound| {
             sound.play();
         }

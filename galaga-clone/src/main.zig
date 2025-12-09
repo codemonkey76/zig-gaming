@@ -21,10 +21,10 @@ pub fn main() !void {
 
     while (!r.shouldQuit()) {
         const dt = r.getDelta();
-        const input = r.getInput();
+        var input = r.getInput();
 
-        game.update(dt, input);
-        r.handleGlobalInput(input);
+        game.update(dt, &input);
+        r.handleGlobalInput(&input);
 
         {
             r.begin();

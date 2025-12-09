@@ -6,6 +6,9 @@ const TextGrid = @import("renderer").TextGrid;
 const Texture = @import("renderer").Texture;
 const FormationGrid = @import("renderer").FormationGrid;
 const SpriteType = @import("../sprite.zig").SpriteType;
+const MutableGameContext = @import("../game.zig").MutableGameContext;
+const GameContext = @import("../game.zig").GameContext;
+const Key = @import("renderer").types.Key;
 
 // Enemy formation layout: defines which enemy type at each grid position
 // null = empty slot
@@ -26,6 +29,11 @@ const EnemyFormation = [6][10]?SpriteType{
 };
 
 pub const Playing = struct {
+    pub const keys = [_]Key{
+        .left,
+        .right,
+        .space,
+    };
     pub fn init(allocator: std.mem.Allocator) @This() {
         _ = allocator;
         return .{};
@@ -35,12 +43,29 @@ pub const Playing = struct {
         _ = self;
     }
 
-    pub fn update(self: *@This(), dt: f32, input: Input) void {
+    pub fn onEnter(_: *@This(), ctx: MutableGameContext) void {
+        for (keys) |key| {
+            ctx.renderer.input_manager.registerKey(key);
+        }
+    }
+
+    pub fn onExit(_: *@This(), ctx: MutableGameContext) void {
+        for (keys) |key| {
+            ctx.renderer.input_manager.unregisterKey(key);
+        }
+    }
+
+    pub fn shouldTransition(_: *const @This()) bool {
+        return true;
+    }
+
+    pub fn update(self: *@This(), dt: f32, input: *Input, ctx: MutableGameContext) void {
         _ = self;
         _ = dt;
         _ = input;
+        _ = ctx;
     }
-    pub fn draw(self: *const @This(), ctx: anytype) void {
+    pub fn draw(self: *const @This(), ctx: GameContext) void {
         _ = self;
         _ = ctx;
     }

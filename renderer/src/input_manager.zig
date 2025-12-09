@@ -12,7 +12,7 @@ pub const InputManager = struct {
     registered_mouse_buttons: std.EnumSet(MouseButton),
     allocator: std.mem.Allocator,
 
-    pub fn init(allocator: std.mem.Allocator) @This() {
+    pub fn init(allocator: std.mem.Allocator) InputManager {
         return .{
             .registered_keys = std.AutoHashMap(Key, void).init(allocator),
             .registered_mouse_buttons = std.EnumSet(MouseButton).initEmpty(),
@@ -20,16 +20,24 @@ pub const InputManager = struct {
         };
     }
 
-    pub fn deinit(self: *@This()) void {
+    pub fn deinit(self: *InputManager) void {
         self.registered_keys.deinit();
     }
 
-    pub fn registerKey(self: *@This(), key: Key) void {
+    pub fn registerKey(self: *InputManager, key: Key) void {
         self.registered_keys.put(key, {}) catch {};
     }
 
-    pub fn registerMouseButton(self: *@This(), button: MouseButton) void {
+    pub fn unregisterKey(self: *InputManager, key: Key) void {
+        _ = self.registered_keys.remove(key);
+    }
+
+    pub fn registerMouseButton(self: *InputManager, button: MouseButton) void {
         self.registered_mouse_buttons.insert(button);
+    }
+
+    pub fn unregisterMouseButton(self: *InputManager, button: MouseButton) void {
+        _ = self.registered_mouse_butons.remove(button);
     }
 
     pub fn poll(self: *const @This()) Input {

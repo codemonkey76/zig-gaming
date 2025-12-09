@@ -1,13 +1,18 @@
 const Font = @import("renderer").types.Font;
 const TextGrid = @import("renderer").TextGrid;
 const Color = @import("renderer").types.Color;
+const GameContext = @import("game.zig").GameContext;
+const std = @import("std");
+
 pub const ScoresHud = struct {
     pub fn init() @This() {
         return .{};
     }
 
-    pub fn draw(self: *const @This(), r: anytype, text_grid: *const TextGrid) void {
+    pub fn draw(self: *const @This(), ctx: GameContext) void {
         _ = self;
+        const r = ctx.renderer;
+        const text_grid = ctx.text_grid;
 
         const arcade_font = r.asset_manager.getAsset(Font, "main");
 
@@ -33,7 +38,8 @@ pub const ScoresHud = struct {
         const pos_label_2up_score = text_grid.getRightAlignedPosition(label_2up_score, 1);
         r.drawText(label_2up_score, pos_label_2up_score, text_grid.font_size, Color.white, arcade_font);
 
-        const credits = "CREDIT 0";
+        var buf: [32]u8 = undefined;
+        const credits = std.fmt.bufPrintZ(&buf, "CREDIT {d}", .{ctx.game_state.credits}) catch "CREDIT 0";
         const pos_credits = text_grid.getBottomPosition(0, 0);
         r.drawText(credits, pos_credits, text_grid.font_size, Color.white, arcade_font);
     }
