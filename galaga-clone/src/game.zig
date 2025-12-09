@@ -42,6 +42,9 @@ pub const Game = struct {
 
     sprite_atlas: SpriteAtlas,
 
+    formation_idle_timer: f32,
+    formation_idle_frame_index: usize,
+
     pub fn init(allocator: std.mem.Allocator, renderer: *Renderer) !@This() {
         try loadAssetsStatic(renderer);
 
@@ -101,6 +104,9 @@ pub const Game = struct {
             .formation_grid = FormationGrid.init(formation_center, 8, 5, formation_spacing),
             .formation_phase = 0.0,
             .sprite_atlas = sprite_atlas,
+
+            .formation_idle_timer = 0.0,
+            .formation_idle_frame_index = 0,
         };
 
         game.registerHandlers();
@@ -139,6 +145,13 @@ pub const Game = struct {
         const formation_speed: f32 = 0.25;
         self.formation_phase += dt * (formation_speed * 2.0 * std.math.pi);
 
+        const idle_period: f32 = 0.25;
+        self.formation_idle_timer += dt;
+        if (self.formation_idle_timer >= idle_period) {
+            self.formation_idle_timer -= idle_period;
+            self.formation_idle_frame_index ^= 1;
+        }
+
         self.starfield.update(dt);
         switch (self.current_mode) {
             .attract => {
@@ -174,8 +187,12 @@ pub const Game = struct {
         self.drawPlayer();
         self.scores_hud.draw(self.renderer, &self.text_grid);
         self.starfield.draw(self.renderer, std.math.sin(self.parallax_phase));
+        self.drawFormationEnemies();
+    }
 
-        // -- Formation debug visualization
+    fn drawFormationEnemies(self: *const @This()) void {
+        const tex = self.renderer.asset_manager.getAsset(Texture, "sprites") orelse return;
+
         const base: f32 = 1.0;
         const amp: f32 = 0.08;
         const pulse = base + amp * std.math.sin(self.formation_phase);
@@ -185,7 +202,16 @@ pub const Game = struct {
             var col: u32 = 0;
             while (col < self.formation_grid.cols) : (col += 1) {
                 const pos = self.formation_grid.getPosition(col, row, pulse);
-                self.renderer.drawCircle(pos, 3.0, Color.green);
+
+                const sprite_type: SpriteType = if (row < 2) .boss else .goei;
+
+                const sprite = self.sprite_atlas.getSprite(sprite_type);
+                if (sprite.idle_count == 0) continue;
+
+                const idx = self.formation_idle_frame_index % sprite.idle_count;
+                const frame = sprite.idle_frames[idx];
+
+                self.renderer.drawSprite(tex, frame, pos, Color.white);
             }
         }
     }

@@ -27,9 +27,10 @@ pub const Flip = enum {
 
 pub const MAX_IDLE_FRAMES: usize = 4;
 pub const MAX_ROT_FRAMES: usize = 6;
-pub const SpriteFrame = struct {
-    src: Rect,
-    flip: Flip = .none,
+pub const SpriteFrame = Rect;
+pub const SpriteResult = struct {
+    frame: SpriteFrame,
+    flip: Flip,
 };
 
 pub const Sprite = struct {
@@ -40,6 +41,31 @@ pub const Sprite = struct {
 
     rotation_frames: [MAX_ROT_FRAMES]SpriteFrame, // 0-6, 0 = rotated -90 degrees, 0 = 0degrees
     rotation_count: usize,
+
+    pub fn getRotated(self: *const @This(), angle: f32) SpriteResult {
+        var normalized = @mod(angle, 360.0);
+        if (normalized < 0) normalized += 360.0;
+
+        const flip = switch (@as(u32, @intFromFloat(normalized))) {
+            0...89 => Flip.x,
+            90...179 => Flip.both,
+            180...269 => Flip.y,
+            270...359 => Flip.none,
+            else => Flip.none,
+        };
+
+        const flip_h = normalized < 180.0;
+        var mapped = if (flip_h) 360.0 - normalized else normalized;
+        if (mapped < 270.0) mapped = 540.0 - mapped;
+
+        const frame_angle = @round((mapped - 270.0) / 15.0);
+        const frame_index = @as(usize, @intFromFloat(@min(frame_angle, @as(f32, @floatFromInt(self.rotation_count - 1)))));
+
+        return SpriteResult{
+            .frame = self.rotation_frames[frame_index],
+            .flip = flip,
+        };
+    }
 };
 
 pub const SpriteAtlas = struct {
@@ -112,6 +138,21 @@ pub const SpriteAtlas = struct {
                 cell(3, 3),
                 cell(4, 3),
                 cell(5, 3),
+            }),
+        );
+
+        sprites.set(
+            .goei,
+            try createSprite(.goei, &[_]SpriteFrame{
+                cell(6, 4),
+                cell(7, 4),
+            }, &[_]SpriteFrame{
+                cell(0, 4),
+                cell(1, 4),
+                cell(2, 4),
+                cell(3, 4),
+                cell(4, 4),
+                cell(5, 4),
             }),
         );
         return .{

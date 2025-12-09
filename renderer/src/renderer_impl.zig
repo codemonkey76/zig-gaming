@@ -163,4 +163,28 @@ pub const Renderer = struct {
             rl.drawText(text, @intFromFloat(pos.x), @intFromFloat(pos.y), font_size, color);
         }
     }
+
+    pub fn drawSprite(
+        self: *const @This(),
+        texture: rl.Texture,
+        src: rl.Rectangle,
+        center: Vec2,
+        tint: Color,
+    ) void {
+        const scale = self.config.ssaa_scale;
+
+        const dest_w = src.width * scale;
+        const dest_h = src.height * scale;
+
+        const dest = rl.Rectangle{
+            .x = center.x - dest_w / 2.0,
+            .y = center.y - dest_h / 2.0,
+            .width = dest_w,
+            .height = dest_h,
+        };
+
+        const origin = rl.Vector2{ .x = 0, .y = 0 };
+
+        rl.drawTexturePro(texture, src, dest, origin, 0.0, tint);
+    }
 };
