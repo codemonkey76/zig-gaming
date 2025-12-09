@@ -14,7 +14,7 @@ const TextGrid = @import("renderer").TextGrid;
 const Starfield = @import("starfield.zig").Starfield;
 const StarfieldConfig = @import("starfield.zig").StarfieldConfig;
 const Rect = r.types.Rect;
-const FormationGrid = @import("formation_grid.zig").FormationGrid;
+const FormationGrid = @import("renderer").FormationGrid;
 const Color = r.types.Color;
 const Vec2 = r.types.Vec2;
 const SpriteAtlas = @import("sprite.zig").SpriteAtlas;
@@ -35,15 +35,9 @@ pub const Game = struct {
     starfield: Starfield,
     scores_hud: ScoresHud,
 
-    parallax_phase: f32,
-
     formation_grid: FormationGrid,
-    formation_phase: f32,
-
     sprite_atlas: SpriteAtlas,
-
-    formation_idle_timer: f32,
-    formation_idle_frame_index: usize,
+    game_state: GameState,
 
     pub fn init(allocator: std.mem.Allocator, renderer: *Renderer) !@This() {
         try loadAssetsStatic(renderer);
@@ -52,13 +46,6 @@ pub const Game = struct {
         try renderer.asset_manager.loadAsset(Texture, "sprites", "assets/sprites/sprites.png");
 
         const text_grid = TextGrid.init(renderer.render_width, renderer.render_height, font, FONT_SIZE);
-
-        const starfield_rect = Rect{
-            .x = 0,
-            .y = 0,
-            .width = renderer.render_width,
-            .height = renderer.render_height,
-        };
 
         const sprite_size: f32 = 16.0 * renderer.config.ssaa_scale;
         const spacing_x = sprite_size * 1.8;
@@ -83,7 +70,7 @@ pub const Game = struct {
         var high_score_mode = HighScoreMode.init(allocator);
         errdefer high_score_mode.deinit();
 
-        var starfield = try Starfield.init(allocator, starfield_rect, .{});
+        var starfield = try Starfield.init(allocator, renderer.render_width, renderer.render_height, .{});
         errdefer starfield.deinit();
 
         const sprite_atlas = try SpriteAtlas.init();
@@ -98,15 +85,9 @@ pub const Game = struct {
             .high_score = high_score_mode,
             .scores_hud = ScoresHud.init(),
             .starfield = starfield,
-            .parallax_phase = 0.0,
-
-            // NEW
-            .formation_grid = FormationGrid.init(formation_center, 8, 5, formation_spacing),
-            .formation_phase = 0.0,
+            .formation_grid = FormationGrid.init(formation_center, 10, 5, formation_spacing, 40),
             .sprite_atlas = sprite_atlas,
-
-            .formation_idle_timer = 0.0,
-            .formation_idle_frame_index = 0,
+            .game_state = .{},
         };
 
         game.registerHandlers();
@@ -138,21 +119,8 @@ pub const Game = struct {
     }
 
     pub fn update(self: *@This(), dt: f32, input: Input) void {
-        const osc_speed: f32 = 0.5;
-        self.parallax_phase += dt * (osc_speed * 2.0 * std.math.pi);
-
-        // ~0.5 Hz breathing for the formation
-        const formation_speed: f32 = 0.25;
-        self.formation_phase += dt * (formation_speed * 2.0 * std.math.pi);
-
-        const idle_period: f32 = 0.25;
-        self.formation_idle_timer += dt;
-        if (self.formation_idle_timer >= idle_period) {
-            self.formation_idle_timer -= idle_period;
-            self.formation_idle_frame_index ^= 1;
-        }
-
-        self.starfield.update(dt);
+        const ctx = self.getContext();
+        self.starfield.update(dt, ctx);
         switch (self.current_mode) {
             .attract => {
                 self.attract.update(dt, input);
@@ -165,28 +133,38 @@ pub const Game = struct {
             .high_score => self.high_score.update(dt, input),
         }
     }
+    fn getContext(self: *@This()) GameContext {
+        return GameContext{
+            .renderer = self.renderer,
+            .text_grid = @constCast(&self.text_grid),
+            .formation_grid = @constCast(&self.formation_grid),
+            .sprite_atlas = @constCast(&self.sprite_atlas),
+            .game_state = &self.game_state,
+        };
+    }
 
     pub fn draw(self: *const @This()) void {
-        self.drawGlobal();
+        const ctx = self.getContext();
+        self.drawGlobal(ctx);
         switch (self.current_mode) {
-            .attract => self.attract.draw(self.renderer, &self.text_grid),
-            .playing => self.playing.draw(self.renderer, &self.text_grid),
-            .high_score => self.high_score.draw(self.renderer, &self.text_grid),
+            .attract => self.attract.draw(ctx),
+            .playing => self.playing.draw(ctx),
+            .high_score => self.high_score.draw(ctx),
         }
     }
 
-    pub fn drawDebug(self: *const @This()) void {
+    pub fn drawDebug(self: *const @This(), ctx: GameContext) void {
         switch (self.current_mode) {
-            .attract => self.attract.drawDebug(self.renderer),
-            .playing => self.playing.drawDebug(self.renderer),
-            .high_score => self.high_score.drawDebug(self.renderer),
+            .attract => self.attract.drawDebug(ctx),
+            .playing => self.playing.drawDebug(ctx),
+            .high_score => self.high_score.drawDebug(ctx),
         }
     }
 
-    fn drawGlobal(self: *const @This()) void {
+    fn drawGlobal(self: *const @This(), ctx: GameContext) void {
         self.drawPlayer();
-        self.scores_hud.draw(self.renderer, &self.text_grid);
-        self.starfield.draw(self.renderer, std.math.sin(self.parallax_phase));
+        self.scores_hud.draw(ctx);
+        self.starfield.draw(ctx);
         self.drawFormationEnemies();
     }
 
@@ -230,4 +208,16 @@ pub const GameMode = enum {
     attract,
     playing,
     high_score,
+};
+
+pub const GameState = struct {
+    parallax_phase: f32 = 0.0,
+};
+
+pub const GameContext = struct {
+    renderer: *Renderer,
+    text_grid: *const TextGrid,
+    formation_grid: *FormationGrid,
+    sprite_atlas: *const SpriteAtlas,
+    game_state: *GameState,
 };

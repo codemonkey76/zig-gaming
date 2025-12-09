@@ -26,28 +26,9 @@ const EnemyFormation = [6][10]?SpriteType{
 };
 
 pub const Playing = struct {
-    formation_grid: FormationGrid,
-
-    pub fn init(allocator: std.mem.Allocator, renderer: anytype) @This() {
-        const sprite_size: f32 = 16.0 * renderer.config.ssaa_scale;
-        const sprite_size_norm = sprite_size / renderer.render_width;
-
-        const spacing_x_norm = sprite_size_norm * 1.2;
-        const spacing_y_norm = (sprite_size / renderer.render_height) * 1.00;
-
-        const formation_center = Vec2{
-            .x = 0.5, // Center horizontally (50%)
-            .y = 0.30, // 30% down from top
-        };
-
-        const formation_spacing = Vec2{
-            .x = spacing_x_norm,
-            .y = spacing_y_norm,
-        };
+    pub fn init(allocator: std.mem.Allocator) @This() {
         _ = allocator;
-        return .{
-            .formation_grid = FormationGrid.init(formation_center, 10, 6, formation_spacing, 40),
-        };
+        return .{};
     }
 
     pub fn deinit(self: *@This()) void {

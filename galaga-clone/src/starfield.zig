@@ -39,15 +39,16 @@ pub const Starfield = struct {
 
     pub fn init(
         allocator: std.mem.Allocator,
-        rect: Rect,
+        width: f32,
+        height: f32,
         cfg: StarfieldConfig,
     ) !@This() {
         const prng = std.Random.DefaultPrng.init(@intCast(std.time.timestamp()));
 
         var self = Starfield{
             .allocator = allocator,
-            .width = rect.width,
-            .height = rect.height,
+            .width = width,
+            .height = height,
             .cfg = cfg,
             .stars = try allocator.alloc(Star, cfg.max_stars),
             .active_stars = cfg.max_stars,
@@ -112,7 +113,10 @@ pub const Starfield = struct {
             self.randomizeStar(&self.stars[i], true);
         }
     }
-    pub fn update(self: *@This(), dt: f32) void {
+    pub fn update(self: *@This(), dt: f32, ctx: anytype) void {
+        const osc_speed: f32 = 0.5;
+        ctx.game_state.*.parallax_phase += dt * (osc_speed * 2.0 * std.math.pi);
+
         var i: usize = 0;
         while (i < self.active_stars) : (i += 1) {
             var star = &self.stars[i];
@@ -204,9 +208,10 @@ pub const Starfield = struct {
             .can_twinkle = can_twinkle,
         };
     }
-    pub fn draw(self: *const @This(), r: anytype, parallax: f32) void {
+    pub fn draw(self: *const @This(), ctx: anytype) void {
         const radius: f32 = @floatFromInt(self.cfg.size);
-        var px = parallax;
+        var px = ctx.game_state.parallax_phase;
+        const r = ctx.renderer;
         if (px < -1.0) px = -1.0;
         if (px > 1.0) px = 1.0;
 
