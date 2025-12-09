@@ -18,14 +18,13 @@ pub const HighScore = struct {
         _ = dt;
         _ = input;
     }
-    pub fn draw(self: *const @This(), renderer: anytype, text_grid: *const TextGrid) void {
+    pub fn draw(self: *const @This(), ctx: anytype) void {
         _ = self;
-        _ = renderer;
-        _ = text_grid;
+        _ = ctx;
     }
 
-    pub fn drawDebug(self: *const @This(), renderer: anytype) void {
+    pub fn drawDebug(self: *const @This(), ctx: anytype) void {
         _ = self;
-        renderer.drawText("HighScore Mode", .{ .x = 10, .y = 10 }, 24, Color.white, null);
+        ctx.renderer.drawText("HighScore Mode", .{ .x = 10, .y = 10 }, 24, Color.white, null);
     }
 };

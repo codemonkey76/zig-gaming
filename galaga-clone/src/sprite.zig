@@ -155,6 +155,100 @@ pub const SpriteAtlas = struct {
                 cell(5, 4),
             }),
         );
+
+        sprites.set(
+            .zako,
+            try createSprite(.zako, &[_]SpriteFrame{
+                cell(6, 5),
+                cell(7, 5),
+            }, &[_]SpriteFrame{
+                cell(0, 5),
+                cell(1, 5),
+                cell(2, 5),
+                cell(3, 5),
+                cell(4, 5),
+                cell(5, 5),
+            }),
+        );
+
+        sprites.set(
+            .scorpion,
+            try createSprite(.scorpion, &[_]SpriteFrame{
+                cell(6, 6),
+            }, &[_]SpriteFrame{
+                cell(0, 6),
+                cell(1, 6),
+                cell(2, 6),
+                cell(3, 6),
+                cell(4, 6),
+                cell(5, 6),
+            }),
+        );
+
+        sprites.set(
+            .midori,
+            try createSprite(.midori, &[_]SpriteFrame{
+                cell(6, 7),
+            }, &[_]SpriteFrame{
+                cell(0, 7),
+                cell(1, 7),
+                cell(2, 7),
+                cell(3, 7),
+                cell(4, 7),
+                cell(5, 7),
+            }),
+        );
+
+        sprites.set(
+            .galaxian,
+            try createSprite(.galaxian, &[_]SpriteFrame{
+                cell(6, 8),
+            }, &[_]SpriteFrame{
+                cell(0, 8),
+                cell(1, 8),
+                cell(2, 8),
+                cell(3, 8),
+                cell(4, 8),
+                cell(5, 8),
+            }),
+        );
+
+        sprites.set(
+            .tombow,
+            try createSprite(.tombow, &[_]SpriteFrame{
+                cell(6, 9),
+            }, &[_]SpriteFrame{
+                cell(0, 9),
+                cell(1, 9),
+                cell(2, 9),
+                cell(3, 9),
+                cell(4, 9),
+                cell(5, 9),
+            }),
+        );
+        sprites.set(
+            .momji,
+            try createSprite(.momji, &[_]SpriteFrame{
+                cell(0, 10),
+                cell(1, 10),
+                cell(2, 10),
+            }, &[_]SpriteFrame{}),
+        );
+
+        sprites.set(
+            .enterprise,
+            try createSprite(.enterprise, &[_]SpriteFrame{
+                cell(6, 11),
+            }, &[_]SpriteFrame{
+                cell(0, 11),
+                cell(1, 11),
+                cell(2, 11),
+                cell(3, 11),
+                cell(4, 11),
+                cell(5, 11),
+            }),
+        );
+
         return .{
             .sprites = sprites,
         };
