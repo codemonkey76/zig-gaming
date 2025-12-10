@@ -19,8 +19,8 @@ pub fn main() !void {
 
     while (!r.shouldQuit()) {
         const dt = r.getDelta();
-        const input = r.getInput();
-        r.handleGlobalInput(input);
+        var input = r.getInput();
+        r.handleGlobalInput(&input);
 
         editor.update(dt, input, r.viewport);
 
