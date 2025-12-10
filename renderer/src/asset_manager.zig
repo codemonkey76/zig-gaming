@@ -3,6 +3,7 @@ const rl = @import("raylib");
 pub const Texture = @import("types.zig").Texture;
 pub const Sound = @import("types.zig").Sound;
 pub const Font = @import("types.zig").Font;
+pub const Color = @import("types.zig").Color;
 
 pub const AssetType = enum {
     texture,
@@ -57,6 +58,43 @@ pub const AssetManager = struct {
             try self.fonts.put(name, asset);
         } else {
             @compileError("Unsupported asset type");
+        }
+    }
+    pub fn loadAssetWithColorKey(
+        self: *@This(),
+        comptime T: type,
+        name: []const u8,
+        path: [:0]const u8,
+        key_color: Color,
+    ) !void {
+        if (T == Texture) {
+            var image = try rl.loadImage(path);
+            defer rl.unloadImage(image);
+
+            rl.imageFormat(&image, rl.PixelFormat.uncompressed_r8g8b8a8);
+            const transparent = rl.Color{ .r = key_color.r, .g = key_color.g, .b = key_color.b, .a = 0 };
+            rl.imageColorReplace(&image, key_color, transparent);
+
+            const asset = try rl.loadTextureFromImage(image);
+            try self.textures.put(name, asset);
+        } else {
+            @compileError("Color key only supported for textures");
+        }
+    }
+    pub fn setTextureColorKey(self: *@This(), name: []const u8, key_color: Color) !void {
+        if (self.textures.getPtr(name)) |tex_ptr| {
+            var image = try rl.loadImageFromTexture(tex_ptr.*);
+            defer rl.unloadImage(image);
+
+            // Replace key color with transparent
+            const transparent = rl.Color{ .r = key_color.r, .g = key_color.g, .b = key_color.b, .a = 0 };
+            rl.imageColorReplace(&image, key_color, transparent);
+
+            // Reload texture from modified image
+            rl.unloadTexture(tex_ptr.*);
+            tex_ptr.* = try rl.loadTextureFromImage(image);
+        } else {
+            return error.TextureNotFound;
         }
     }
 

@@ -10,6 +10,13 @@ pub const FormationMode = enum {
     pulse,
 };
 
+pub const FormationConfig = struct {
+    sway_speed: f32 = 0.1, // cycles per second
+    sway_amplitude: f32 = 0.06,
+
+    pulse_speed: f32 = 0.2,
+    pulse_amplitude: f32 = 0.15,
+};
 pub const FormationGrid = struct {
     cols: u32,
     rows: u32,
@@ -37,6 +44,7 @@ pub const FormationGrid = struct {
         rows: u32,
         base_spacing: Vec2,
         total_ships: u32,
+        config: FormationConfig,
     ) @This() {
         return .{
             .cols = cols,
@@ -44,6 +52,11 @@ pub const FormationGrid = struct {
             .base_center = center,
             .base_spacing = base_spacing,
             .total_ships = total_ships,
+
+            .sway_speed = config.sway_speed,
+            .sway_amplitude = config.sway_amplitude,
+            .pulse_speed = config.pulse_speed,
+            .pulse_amplitude = config.pulse_amplitude,
         };
     }
 

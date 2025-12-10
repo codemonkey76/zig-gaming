@@ -5,6 +5,7 @@ const Renderer = r.Renderer;
 const InputManager = r.InputManager;
 const TextGrid = r.TextGrid;
 const FormationGrid = r.FormationGrid;
+const FormationConfig = r.FormationConfig;
 
 const Input = r.types.Input;
 const Key = r.types.Key;
@@ -56,7 +57,7 @@ pub const Game = struct {
 
         const text_grid = TextGrid.init(renderer.render_width, renderer.render_height, font, FONT_SIZE);
 
-        const formation_grid = initFormationGrid(renderer);
+        const formation_grid = initFormationGrid();
         const sprite_atlas = try SpriteAtlas.init();
 
         var attract_mode = AttractMode.init(allocator);
@@ -121,6 +122,7 @@ pub const Game = struct {
         self.handleInput(input);
         const ctx = self.getMutableContext();
         self.starfield.update(dt, ctx);
+        self.formation_grid.update(dt);
 
         switch (self.current_mode) {
             .attract => {
@@ -243,21 +245,21 @@ pub const Game = struct {
 
     fn loadAssets(renderer: *Renderer) !void {
         try renderer.asset_manager.loadFont("main", "assets/fonts/arcade.ttf", FONT_SIZE);
-        try renderer.asset_manager.loadAsset(Texture, "sprites", "assets/sprites/sprites.png");
+        try renderer.asset_manager.loadAssetWithColorKey(Texture, "sprites", "assets/sprites/sprites.png", Color.black);
     }
 
-    fn initFormationGrid(renderer: *Renderer) FormationGrid {
-        const sprite_size: f32 = 16.0 * renderer.config.ssaa_scale;
+    fn initFormationGrid() FormationGrid {
         const spacing = Vec2{
-            .x = sprite_size * 1.8,
-            .y = sprite_size * 1.4,
+            .x = 0.07,
+            .y = 0.06,
         };
         const center = Vec2{
-            .x = renderer.render_width / 2.0,
-            .y = renderer.render_height * 0.30,
+            .x = 0.50,
+            .y = 0.30,
         };
+        const config = FormationConfig{};
 
-        return FormationGrid.init(center, 10, 5, spacing, 40);
+        return FormationGrid.init(center, 10, 6, spacing, 10, config);
     }
 };
 
