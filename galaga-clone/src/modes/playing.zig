@@ -11,6 +11,9 @@ const SpriteType = @import("../sprite.zig").SpriteType;
 const MutableGameContext = @import("../game.zig").MutableGameContext;
 const GameContext = @import("../game.zig").GameContext;
 const Key = r.types.Key;
+const LevelIndicator = @import("../level_indicator.zig").LevelIndicator;
+const LifeIndicator = @import("../life_indicator.zig").LifeIndicator;
+const common = @import("common.zig");
 
 // Enemy formation layout: defines which enemy type at each grid position
 // null = empty slot
@@ -33,16 +36,22 @@ const EnemyFormation = [6][10]?SpriteType{
 pub const Playing = struct {
     idle_frame_idx: usize = 0,
     idle_frame_timer: f32 = 0.0,
+    level_indicator: LevelIndicator,
+    life_indicator: LifeIndicator,
 
     pub const keys = [_]Key{
         .left,
         .right,
         .space,
         .a,
+        .up,
     };
     pub fn init(allocator: std.mem.Allocator) @This() {
         _ = allocator;
-        return .{};
+        return .{
+            .level_indicator = LevelIndicator.init(),
+            .life_indicator = LifeIndicator.init(),
+        };
     }
 
     pub fn deinit(self: *@This()) void {
@@ -50,15 +59,11 @@ pub const Playing = struct {
     }
 
     pub fn onEnter(_: *@This(), ctx: MutableGameContext) void {
-        for (keys) |key| {
-            ctx.renderer.input_manager.registerKey(key);
-        }
+        common.registerKeys(ctx, &keys);
     }
 
     pub fn onExit(_: *@This(), ctx: MutableGameContext) void {
-        for (keys) |key| {
-            ctx.renderer.input_manager.unregisterKey(key);
-        }
+        common.unregisterKeys(ctx, &keys);
     }
 
     pub fn shouldTransition(_: *const @This()) bool {
@@ -75,13 +80,20 @@ pub const Playing = struct {
         }
     }
 
-    fn handleKeys(_: *@This(), input: *Input, ctx: MutableGameContext) void {
+    fn handleKeys(self: *@This(), input: *Input, ctx: MutableGameContext) void {
         if (input.isKeyPressed(.a)) {
             ctx.formation_grid.addShip();
         }
+        if (input.isKeyPressed(.up)) {
+            ctx.game_state.current_stage += 1;
+            self.level_indicator.setStage(ctx.game_state.current_stage);
+        }
     }
+
     pub fn draw(self: *const @This(), ctx: GameContext) void {
         self.drawFormationEnemies(ctx);
+        self.level_indicator.draw(ctx);
+        self.life_indicator.draw(ctx);
     }
 
     fn drawFormationEnemies(self: *const @This(), ctx: GameContext) void {

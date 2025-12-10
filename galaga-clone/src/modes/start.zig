@@ -38,6 +38,7 @@ pub const Start = struct {
 
         if (input.isKeyPressed(.one)) {
             if (ctx.game_state.credits >= 1) {
+                ctx.game_state.active = true;
                 ctx.game_state.credits -= 1;
                 ctx.game_state.current_player = 1;
                 ctx.game_state.num_players = 1;
@@ -49,6 +50,7 @@ pub const Start = struct {
         }
         if (input.isKeyPressed(.two)) {
             if (ctx.game_state.credits >= 2) {
+                ctx.game_state.active = true;
                 ctx.game_state.credits -= 2;
                 ctx.game_state.current_player = 1;
                 ctx.game_state.num_players = 2;

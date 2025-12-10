@@ -4,8 +4,11 @@ const Texture = @import("renderer").types.Texture;
 const std = @import("std");
 
 pub const SpriteType = enum {
+    // Player
     player,
     player_alt,
+
+    // Enemies
     boss,
     boss_alt,
     goei,
@@ -16,6 +19,16 @@ pub const SpriteType = enum {
     tombow,
     momji,
     enterprise,
+
+    // Projectiles
+    bullet,
+
+    level_1,
+    level_5,
+    level_10,
+    level_20,
+    level_30,
+    level_50,
 };
 
 pub const Flip = enum {
@@ -248,6 +261,13 @@ pub const SpriteAtlas = struct {
                 cell(5, 11),
             }),
         );
+
+        sprites.set(.level_1, try createSprite(.level_1, &[_]SpriteFrame{.{ .x = 307, .y = 172, .width = 8, .height = 16 }}, &[_]SpriteFrame{}));
+        sprites.set(.level_5, try createSprite(.level_5, &[_]SpriteFrame{.{ .x = 317, .y = 172, .width = 8, .height = 16 }}, &[_]SpriteFrame{}));
+        sprites.set(.level_10, try createSprite(.level_10, &[_]SpriteFrame{.{ .x = 327, .y = 172, .width = 16, .height = 16 }}, &[_]SpriteFrame{}));
+        sprites.set(.level_20, try createSprite(.level_20, &[_]SpriteFrame{.{ .x = 345, .y = 172, .width = 16, .height = 16 }}, &[_]SpriteFrame{}));
+        sprites.set(.level_30, try createSprite(.level_30, &[_]SpriteFrame{.{ .x = 363, .y = 172, .width = 16, .height = 16 }}, &[_]SpriteFrame{}));
+        sprites.set(.level_50, try createSprite(.level_50, &[_]SpriteFrame{.{ .x = 381, .y = 172, .width = 16, .height = 16 }}, &[_]SpriteFrame{}));
 
         return .{
             .sprites = sprites,

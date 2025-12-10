@@ -122,6 +122,7 @@ pub const Game = struct {
         self.handleInput(input);
         const ctx = self.getMutableContext();
         self.starfield.update(dt, ctx);
+        self.scores_hud.update(dt, ctx);
         self.formation_grid.update(dt);
 
         switch (self.current_mode) {
@@ -275,6 +276,12 @@ pub const GameState = struct {
     credits: u32 = 0,
     num_players: u8 = 0,
     current_player: u8 = 0,
+    current_stage: u8 = 0,
+    p1_lives: u8 = 3,
+    p2_lives: u8 = 3,
+    p1_score: u32 = 0,
+    p2_score: u32 = 0,
+    active: bool = false,
 };
 
 pub const GameContext = struct {
