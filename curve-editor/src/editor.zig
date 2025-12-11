@@ -10,6 +10,10 @@ const Viewport = types.Viewport;
 const Bezier = @import("renderer").Bezier;
 const bezier_draw = @import("renderer").bezier_draw;
 
+const PatternType = @import("renderer").PatternType;
+const meta = std.meta;
+const PatternTags = meta.tags(PatternType);
+
 const MAX_POINTS = 100;
 const POINT_RADIUS: f32 = 8.0;
 const SELECTION_THRESHOLD: f32 = 0.03;
@@ -20,6 +24,8 @@ pub const Editor = struct {
     active_bezier_index: ?usize,
     drag_point: ?DragPoint,
     allocator: std.mem.Allocator,
+
+    selected_pattern: ?PatternType = null,
 
     pub fn init() @This() {
         const allocator = std.heap.page_allocator;
@@ -34,12 +40,50 @@ pub const Editor = struct {
             .allocator = allocator,
         };
     }
+
+    pub fn initWithPattern(pattern: PatternType) !@This() {
+        var editor = init();
+        editor.selected_pattern = pattern;
+        try editor.loadPattern(pattern);
+        return editor;
+    }
+
     pub fn deinit(self: *@This()) void {
         for (self.beziers.items) |*bezier| {
             bezier.deinit();
         }
 
         self.beziers.deinit(self.allocator);
+    }
+
+    fn loadPattern(self: *@This(), pattern: PatternType) !void {
+        const path = pattern.getPath();
+
+        for (self.beziers.items) |*b| {
+            b.deinit();
+        }
+        self.beziers.clearRetainingCapacity();
+
+        const seg_count = path.getSegmentCount();
+        if (seg_count == 0) {
+            self.active_bezier_index = null;
+            self.drag_point = null;
+            return;
+        }
+
+        var i: usize = 0;
+        while (i < seg_count) : (i += 1) {
+            const seg = path.getSegment(i) orelse break;
+            const points = [_]Vec2{ seg.p0, seg.p1, seg.p2, seg.p3 };
+
+            var bezier = try Bezier.fromPoints(self.allocator, &points);
+            errdefer bezier.deinit();
+
+            try self.beziers.append(self.allocator, bezier);
+        }
+
+        self.active_bezier_index = 0;
+        self.drag_point = null;
     }
 
     pub fn registerInput(input_manager: *InputManager) void {
@@ -51,6 +95,8 @@ pub const Editor = struct {
 
     pub fn update(self: *@This(), dt: f32, input: Input, viewport: Viewport) void {
         _ = dt;
+
+        self.handlePatternUiClick(input);
 
         if (input.isKeyPressed(Key.e)) {
             self.exportPoints();
@@ -66,6 +112,34 @@ pub const Editor = struct {
         self.handleMouseDragging(input, norm_mouse);
         self.handleLeftMouseRelease(input);
         self.handleRightMouseButton(input, norm_mouse);
+    }
+
+    fn handlePatternUiClick(self: *@This(), input: Input) void {
+        if (!input.isMouseButtonPressed(MouseButton.left)) return;
+
+        const mx = input.mouse_pos.x;
+        const my = input.mouse_pos.y;
+
+        const start_y: f32 = 60;
+        const line_h: f32 = 18;
+        const x_min: f32 = 10;
+        const x_max: f32 = 220;
+
+        if (mx < x_min or mx > x_max) return;
+
+        const rel_y = my - start_y;
+        if (rel_y < 0) return;
+
+        const idx_f = rel_y / line_h;
+        const idx: usize = @intFromFloat(idx_f);
+        if (idx >= PatternTags.len) return;
+
+        const tag = PatternTags[idx];
+        self.selected_pattern = tag;
+
+        self.loadPattern(tag) catch |err| {
+            std.debug.print("Failed to load pattern {s}: {any}\n", .{ @tagName(tag), err });
+        };
     }
 
     fn createNewBezier(self: *@This()) void {
@@ -250,6 +324,21 @@ pub const Editor = struct {
             }) catch return;
 
             r.drawText(info_text, Vec2{ .x = 10, .y = 30 }, 16, Color.orange, null);
+        }
+
+        // ⬇️ NEW: pattern list
+        const start_y: f32 = 60;
+        const line_h: f32 = 18;
+        r.drawText("Patterns:", Vec2{ .x = 10, .y = start_y - line_h }, 16, Color.white, null);
+
+        for (PatternTags, 0..) |tag, idx| {
+            const name = @tagName(tag);
+            const y = start_y + @as(f32, @floatFromInt(idx)) * line_h;
+
+            const is_selected = if (self.selected_pattern) |p| p == tag else false;
+            const col = if (is_selected) Color.yellow else Color.light_gray;
+
+            r.drawText(name, Vec2{ .x = 10, .y = y }, 16, col, null);
         }
     }
 

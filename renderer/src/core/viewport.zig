@@ -1,5 +1,6 @@
-const Vec2 = @import("types.zig").Vec2;
-const Rect = @import("types.zig").Rect;
+const types = @import("types.zig");
+const Vec2 = types.Vec2;
+const Rect = types.Rect;
 
 pub const Viewport = struct {
     rect: Rect,

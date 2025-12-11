@@ -1,3 +1,4 @@
+const std = @import("std");
 const levelDef = @import("level_definition.zig");
 const LevelPhase = levelDef.LevelPhase;
 const SpawnResult = levelDef.SpawnResult;
@@ -81,31 +82,43 @@ pub const LevelManager = struct {
             }
         }
 
-        // Check if wave complete
+        return null;
+    }
+
+    pub fn isCurrentWaveFinishedSpawning(self: *const @This()) bool {
+        const getLevelDefinition = @import("level_definition.zig").getLevelDefinition;
+        const level_def = getLevelDefinition(self.current_level) orelse return true;
+
+        if (self.current_wave >= level_def.waves.len) return true;
+
+        const wave = level_def.waves[self.current_wave];
+
         const group1_done = self.group1_spawned >= wave.group1.enemies.len;
         const group2_done = if (wave.group2) |g2|
             self.group2_spawned >= g2.enemies.len
         else
             true;
 
-        if (group1_done and group2_done) {
-            const max_spawn_time = blk: {
-                var max: f32 = @as(f32, @floatFromInt(wave.group1.enemies.len - 1)) * wave.group1.spawn_interval;
-                if (wave.group2) |g2| {
-                    const g2_time = @as(f32, @floatFromInt(g2.enemies.len - 1)) * g2.spawn_interval;
-                    if (g2_time > max) max = g2_time;
-                }
-                break :blk max;
-            };
+        return group1_done and group2_done;
+    }
 
-            if (self.wave_timer >= max_spawn_time + wave.delay) {
-                self.current_wave += 1;
-                self.wave_timer = 0.0;
-                self.group1_spawned = 0;
-                self.group2_spawned = 0;
-            }
+    pub fn advanceWave(self: *@This()) void {
+        const getLevelDefinition = @import("level_definition.zig").getLevelDefinition;
+        const level_def = getLevelDefinition(self.current_level) orelse return;
+
+        std.debug.print("Level {d}: finished wave {d}\n", .{
+            self.current_level,
+            self.current_wave + 1,
+        });
+
+        self.current_wave += 1;
+        self.wave_timer = 0.0;
+        self.group1_spawned = 0;
+        self.group2_spawned = 0;
+
+        if (self.current_wave >= level_def.waves.len) {
+            self.phase = .combat;
         }
-        return null;
     }
 
     pub fn onFormationEnemyDestroyed(self: *@This()) void {

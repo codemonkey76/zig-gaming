@@ -1,5 +1,5 @@
-const Vec2 = @import("renderer").types.Vec2;
-const BezierSegment = @import("bezier_segment.zig").BezierSegment;
+const Vec2 = @import("../core/types.zig").Vec2;
+const BezierSegment = @import("../math/bezier_segment.zig").BezierSegment;
 
 pub const PathDefinition = struct {
     control_points: []const Vec2,

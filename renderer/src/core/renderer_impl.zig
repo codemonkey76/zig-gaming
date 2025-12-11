@@ -11,8 +11,8 @@ const Color = types.Color;
 const Vec2 = types.Vec2;
 const RendererConfig = @import("config.zig").RenderConfig;
 const AssetManager = @import("asset_manager.zig").AssetManager;
-const Font = @import("types.zig").Font;
-const TextGrid = @import("text_grid.zig").TextGrid;
+const Font = types.Font;
+const TextGrid = @import("../drawing/text_grid.zig").TextGrid;
 
 pub const Renderer = struct {
     viewport: Viewport,

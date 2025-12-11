@@ -1,6 +1,7 @@
-const Bezier = @import("bezier.zig").Bezier;
-const Vec2 = @import("types.zig").Vec2;
-const Color = @import("types.zig").Color;
+const Bezier = @import("../math/bezier.zig").Bezier;
+const types = @import("../core/types.zig");
+const Vec2 = types.Vec2;
+const Color = types.Color;
 
 /// Draw a bezier curve with the given number of line segments
 pub fn drawBezierCurve(

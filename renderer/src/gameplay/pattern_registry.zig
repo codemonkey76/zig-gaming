@@ -1,5 +1,5 @@
 const PathDefinition = @import("path_definition.zig").PathDefinition;
-const Vec2 = @import("renderer").types.Vec2;
+const Vec2 = @import("../core/types.zig").Vec2;
 
 /// Registry of all predefined patterns
 pub const PatternRegistry = struct {

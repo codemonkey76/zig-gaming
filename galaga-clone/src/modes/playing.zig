@@ -161,6 +161,10 @@ pub const Playing = struct {
             }
         }
 
+        if (self.level_manager.isCurrentWaveFinishedSpawning() and !self.level_manager.isSpawningComplete() and self.allFormationEnemiesSettled()) {
+            self.level_manager.advanceWave();
+        }
+
         if (self.level_manager.isLevelComplete()) {
             self.onLevelComplete(ctx);
         }
@@ -218,6 +222,20 @@ pub const Playing = struct {
                 }
             }
         }
+    }
+
+    fn allFormationEnemiesSettled(self: *const @This()) bool {
+        for (self.enemies.items) |*enemy| {
+            if (enemy.is_dead) continue;
+
+            if (enemy.target_col != null and enemy.target_row != null) {
+                switch (enemy.state) {
+                    .entering, .entering_formation => return false,
+                    else => {},
+                }
+            }
+        }
+        return true;
     }
 
     fn checkBoundsCollision(a: anytype, b: anytype) bool {

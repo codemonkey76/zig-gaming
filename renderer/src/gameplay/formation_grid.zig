@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const Vec2 = @import("types.zig").Vec2;
+const Vec2 = @import("../core/types.zig").Vec2;
 
 pub const FormationMode = enum {
     /// Formation moves side-to-side, stays compact while ships are joining

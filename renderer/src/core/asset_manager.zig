@@ -1,9 +1,10 @@
 const std = @import("std");
 const rl = @import("raylib");
-pub const Texture = @import("types.zig").Texture;
-pub const Sound = @import("types.zig").Sound;
-pub const Font = @import("types.zig").Font;
-pub const Color = @import("types.zig").Color;
+const types = @import("types.zig");
+pub const Texture = types.Texture;
+pub const Sound = types.Sound;
+pub const Font = types.Font;
+pub const Color = types.Color;
 
 pub const AssetType = enum {
     texture,

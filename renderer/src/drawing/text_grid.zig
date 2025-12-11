@@ -1,6 +1,7 @@
 const rl = @import("raylib");
-const Vec2 = @import("types.zig").Vec2;
-const Font = @import("types.zig").Font;
+const types = @import("../core/types.zig");
+const Vec2 = types.Vec2;
+const Font = types.Font;
 
 pub const TextGrid = struct {
     cols: u32,
