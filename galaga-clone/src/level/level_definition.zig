@@ -1,5 +1,5 @@
 pub const SpriteType = @import("../graphics/sprite.zig").SpriteType;
-pub const PatternType = @import("pattern_registry.zig").PatternType;
+pub const PatternType = @import("renderer").PatternType;
 
 pub const LevelDefinition = struct {
     level_number: u8,

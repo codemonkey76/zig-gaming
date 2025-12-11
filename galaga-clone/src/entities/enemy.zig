@@ -1,8 +1,9 @@
 const std = @import("std");
-const Vec2 = @import("renderer").types.Vec2;
+const r = @import("renderer");
+const Vec2 = r.types.Vec2;
+const PatternType = r.PatternType;
+const PathDefinition = r.PathDefinition;
 const SpriteType = @import("../graphics/sprite.zig").SpriteType;
-const PatternType = @import("../level/pattern_registry.zig").PatternType;
-const PathDefinition = @import("../level/path_definition.zig").PathDefinition;
 const SpawnResult = @import("../level/level_definition.zig").SpawnResult;
 
 pub const Enemy = struct {
@@ -35,6 +36,8 @@ pub const Enemy = struct {
     pub fn init(spawn_result: SpawnResult) Enemy {
         const path = spawn_result.pattern.getPath();
 
+        const health: i32 = if (spawn_result.enemy.enemy_type == .boss) 2 else 1;
+
         return .{
             .enemy_type = spawn_result.enemy.enemy_type,
             .position = path.getStartPosition(),
@@ -43,6 +46,7 @@ pub const Enemy = struct {
             .target_row = spawn_result.enemy.row,
             .is_transient = spawn_result.is_transient,
             .entry_path = path,
+            .health = health,
         };
     }
     pub fn getCollisionBounds(self: *const @This()) CollisionBounds {
@@ -161,6 +165,10 @@ pub const Enemy = struct {
         self.health -= damage;
         if (self.health <= 0) {
             self.is_dead = true;
+        }
+
+        if (self.enemy_type == .boss and self.health == 1) {
+            self.enemy_type = .boss_alt;
         }
     }
 };
