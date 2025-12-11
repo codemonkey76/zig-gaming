@@ -1,17 +1,17 @@
-const r = @import("renderer");
+const engine = @import("arcade_engine");
 
-const TextGrid = r.TextGrid;
-const Font = r.types.Font;
-const Input = r.types.Input;
-const Texture = r.types.Texture;
-const Color = r.types.Color;
-const Vec2 = r.types.Vec2;
-const cyan = r.types.cyan;
-const Sprite = @import("../graphics/sprite.zig").Sprite;
-const SpriteFrame = @import("../graphics/sprite.zig").SpriteFrame;
+const TextGrid = engine.spatial.TextGrid;
+const Font = engine.types.Font;
+const Input = engine.types.Input;
+const Texture = engine.types.Texture;
+const Color = engine.types.Color;
+const Vec2 = engine.types.Vec2;
+const cyan = engine.types.cyan;
+const Sprite = engine.graphics.Sprite;
+const SpriteFrame = engine.graphics.SpriteFrame;
 const MutableGameContext = @import("../context.zig").MutableGameContext;
 const GameContext = @import("../context.zig").GameContext;
-const Key = r.types.Key;
+const Key = engine.types.Key;
 const common = @import("common.zig");
 const std = @import("std");
 
@@ -70,8 +70,8 @@ pub const Start = struct {
 
     pub fn drawDebug(_: *const @This(), _: GameContext) void {}
     pub fn draw(self: *const @This(), ctx: GameContext) void {
-        const arcade_font = ctx.renderer.asset_manager.getAsset(Font, "main");
-        const tex = ctx.renderer.asset_manager.getAsset(Texture, "sprites") orelse return;
+        const arcade_font = ctx.assets_manager.getAsset(Font, "main");
+        const tex = ctx.assets_manager.getAsset(Texture, "sprites") orelse return;
         const sprite: Sprite = ctx.sprite_atlas.getSprite(.player);
 
         const middle_row = ctx.text_grid.rows / 2;
@@ -88,14 +88,16 @@ pub const Start = struct {
 
         const pos_bonus_3 = ctx.text_grid.getPosition(5, middle_row + 4);
         ctx.renderer.drawText("AND FOR EVERY 100000 PTS", pos_bonus_3, ctx.text_grid.font_size, Color.yellow, arcade_font);
+
         drawSpriteAtTextRow(ctx, tex, sprite.idle_frames[0], 3, middle_row);
         drawSpriteAtTextRow(ctx, tex, sprite.idle_frames[0], 3, middle_row + 2);
         drawSpriteAtTextRow(ctx, tex, sprite.idle_frames[0], 3, middle_row + 4);
         _ = self;
     }
+
     fn drawSpriteAtTextRow(ctx: anytype, tex: Texture, frame: SpriteFrame, col: u32, row: u32) void {
         const text_pos = ctx.text_grid.getPosition(col, row);
-        const sprite_scale = ctx.renderer.config.ssaa_scale;
+        const sprite_scale = ctx.window.config.ssaa_scale;
         const sprite_height = frame.height * sprite_scale;
 
         // Center sprite vertically with text line

@@ -1,5 +1,5 @@
-const r = @import("renderer");
-const Vec2 = r.types.Vec2;
+const engine = @import("arcade_engine");
+const Vec2 = engine.types.Vec2;
 const SpriteType = @import("../graphics/sprite.zig").SpriteType;
 
 pub const ExplosionType = enum {

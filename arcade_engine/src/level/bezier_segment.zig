@@ -1,4 +1,4 @@
-const Vec2 = @import("../core/types.zig").Vec2;
+const Vec2 = @import("../types.zig").Vec2;
 
 /// A single bezier curve segment (cubic bezier)
 pub const BezierSegment = struct {

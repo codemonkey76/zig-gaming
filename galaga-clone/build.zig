@@ -4,7 +4,7 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const renderer = b.dependency("renderer", .{
+    const engine = b.dependency("arcade_engine", .{
         .target = target,
         .optimize = optimize,
     });
@@ -16,7 +16,7 @@ pub fn build(b: *std.Build) void {
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "renderer", .module = renderer.module("renderer") },
+                .{ .name = "arcade_engine", .module = engine.module("arcade_engine") },
             },
         }),
     });

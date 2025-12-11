@@ -1,13 +1,15 @@
 const std = @import("std");
-const r = @import("renderer");
-const Renderer = r.Renderer;
-const Font = r.types.Font;
-const Texture = r.types.Texture;
-const Color = r.types.Color;
-const Vec2 = r.types.Vec2;
-const TextGrid = r.TextGrid;
-const FormationGrid = r.FormationGrid;
-const FormationConfig = r.FormationConfig;
+const engine = @import("arcade_engine");
+const Window = engine.core.Window;
+const Renderer = engine.core.Renderer;
+const AssetManager = engine.core.AssetManager;
+const Font = engine.types.Font;
+const Texture = engine.types.Texture;
+const Color = engine.types.Color;
+const Vec2 = engine.types.Vec2;
+const TextGrid = engine.spatial.TextGrid;
+const FormationGrid = engine.spatial.FormationGrid;
+const FormationConfig = engine.spatial.FormationConfig;
 const SpriteAtlas = @import("graphics/sprite.zig").SpriteAtlas;
 const c = @import("constants.zig");
 
@@ -16,10 +18,14 @@ pub const Assets = struct {
     formation_grid: FormationGrid,
     sprite_atlas: SpriteAtlas,
 
-    pub fn init(renderer: *Renderer) !Assets {
-        try loadAssets(renderer);
+    pub fn init(
+        _: *const Window,
+        renderer: *const Renderer,
+        assets_manager: *AssetManager,
+    ) !Assets {
+        try loadAssets(assets_manager);
 
-        const font = renderer.asset_manager.getAsset(Font, "main") orelse
+        const font = assets_manager.getAsset(Font, "main") orelse
             return error.FontNotLoaded;
 
         const text_grid = TextGrid.init(
@@ -36,9 +42,14 @@ pub const Assets = struct {
         };
     }
 
-    fn loadAssets(renderer: *Renderer) !void {
-        try renderer.asset_manager.loadFont("main", "assets/fonts/arcade.ttf", c.FONT_SIZE);
-        try renderer.asset_manager.loadAssetWithColorKey(Texture, "sprites", "assets/sprites/sprites.png", Color.black);
+    fn loadAssets(assets_manager: *AssetManager) !void {
+        try assets_manager.loadFont("main", "assets/fonts/arcade.ttf", c.FONT_SIZE);
+        try assets_manager.loadAssetWithColorKey(
+            Texture,
+            "sprites",
+            "assets/sprites/sprites.png",
+            Color.black,
+        );
     }
 
     fn initFormationGrid() FormationGrid {

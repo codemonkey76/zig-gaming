@@ -9,8 +9,8 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const renderer_mod = b.addModule("renderer", .{
-        .root_source_file = b.path("src/renderer.zig"),
+    const renderer_mod = b.addModule("arcade_engine", .{
+        .root_source_file = b.path("src/lib.zig"),
         .target = target,
         .optimize = optimize,
         .imports = &.{

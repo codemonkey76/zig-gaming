@@ -1,5 +1,45 @@
 pub const SpriteType = @import("../graphics/sprite.zig").SpriteType;
-pub const PatternType = @import("renderer").PatternType;
+pub const engine = @import("arcade_engine");
+pub const PathDefinition = engine.level.PathDefinition;
+
+// Create a simple PatternType enum for now
+pub const PatternType = enum {
+    swoop_left,
+    swoop_right,
+    figure_eight,
+    dive_bomb,
+    straight_down,
+
+    pub fn getPath(self: @This()) PathDefinition {
+        // TODO: Load from path registry or define paths here
+        // For now, return a simple default path
+        const points = switch (self) {
+            .swoop_left => &[_]engine.types.Vec2{
+                .{ .x = -0.1, .y = 0.5 },
+                .{ .x = 0.1, .y = 0.3 },
+                .{ .x = 0.3, .y = 0.1 },
+                .{ .x = 0.5, .y = 0.15 },
+            },
+            .swoop_right => &[_]engine.types.Vec2{
+                .{ .x = 1.1, .y = 0.5 },
+                .{ .x = 0.9, .y = 0.3 },
+                .{ .x = 0.7, .y = 0.1 },
+                .{ .x = 0.5, .y = 0.15 },
+            },
+            else => &[_]engine.types.Vec2{
+                .{ .x = 0.5, .y = -0.1 },
+                .{ .x = 0.5, .y = 0.1 },
+                .{ .x = 0.5, .y = 0.3 },
+                .{ .x = 0.5, .y = 0.5 },
+            },
+        };
+
+        return PathDefinition{
+            .control_points = points,
+            .total_duration = 3.0,
+        };
+    }
+};
 
 pub const LevelDefinition = struct {
     level_number: u8,

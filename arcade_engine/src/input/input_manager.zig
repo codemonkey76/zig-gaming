@@ -1,7 +1,7 @@
 const std = @import("std");
 const rl = @import("raylib");
 
-const types = @import("types.zig");
+const types = @import("../types.zig");
 
 const MouseButton = types.MouseButton;
 const Key = rl.KeyboardKey;

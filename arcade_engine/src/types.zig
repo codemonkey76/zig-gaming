@@ -6,7 +6,6 @@ pub const Color = rl.Color;
 pub const Rect = rl.Rectangle;
 pub const cyan = rl.Color{ .r = 0, .g = 255, .b = 255, .a = 255 };
 pub const dark_red = rl.Color{ .r = 128, .g = 0, .b = 0, .a = 255 };
-pub const Viewport = @import("viewport.zig").Viewport;
 
 pub const Texture = rl.Texture2D;
 pub const Sound = rl.Sound;

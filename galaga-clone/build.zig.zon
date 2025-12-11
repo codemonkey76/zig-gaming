@@ -1,19 +1,16 @@
 .{
     .name = .galaga_clone,
     .version = "0.0.0",
-    .fingerprint = 0x16fe351d8445cc1b, // Changing this has security and trust implications.
+    .fingerprint = 0x16fe351d8445cc1b,
     .minimum_zig_version = "0.15.2",
     .dependencies = .{
-        .renderer = .{
-            .path = "../renderer",
+        .arcade_engine = .{
+            .path = "../arcade_engine",
         },
     },
     .paths = .{
         "build.zig",
         "build.zig.zon",
         "src",
-        // For example...
-        //"LICENSE",
-        //"README.md",
     },
 }

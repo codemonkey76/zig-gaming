@@ -1,8 +1,8 @@
 const GameContext = @import("../context.zig").GameContext;
-const r = @import("renderer");
-const Vec2 = r.types.Vec2;
-const Color = r.types.Color;
-const Texture = r.types.Texture;
+const engine = @import("arcade_engine");
+const Vec2 = engine.types.Vec2;
+const Color = engine.types.Color;
+const Texture = engine.types.Texture;
 const TILE_SIZE: f32 = 16.0;
 
 pub const LifeIndicator = struct {
@@ -17,13 +17,13 @@ pub const LifeIndicator = struct {
     }
 
     pub fn draw(_: *const @This(), ctx: GameContext) void {
-        const tex = ctx.renderer.asset_manager.getAsset(Texture, "sprites") orelse return;
+        const tex = ctx.assets_manager.getAsset(Texture, "sprites") orelse return;
         const sprite = ctx.sprite_atlas.getSprite(.player);
         if (sprite.idle_count == 0) return;
 
         const frame = sprite.idle_frames[0];
 
-        const sprite_size = TILE_SIZE * ctx.renderer.config.ssaa_scale;
+        const sprite_size = TILE_SIZE * ctx.window.config.ssaa_scale;
         const start_y = ctx.renderer.render_height - (sprite_size / 2);
         const start_x = sprite_size / 2;
 

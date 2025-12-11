@@ -1,4 +1,5 @@
-const Vec2 = @import("renderer").types.Vec2;
+const engine = @import("arcade_engine");
+const Vec2 = engine.types.Vec2;
 const SpriteType = @import("../graphics/sprite.zig").SpriteType;
 
 pub const Player = struct {

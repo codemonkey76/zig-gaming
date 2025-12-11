@@ -1,7 +1,7 @@
-const r = @import("renderer");
-const Font = r.types.Font;
-const TextGrid = r.TextGrid;
-const Color = r.types.Color;
+const engine = @import("arcade_engine");
+const Font = engine.types.Font;
+const TextGrid = engine.spatial.TextGrid;
+const Color = engine.types.Color;
 const GameContext = @import("../context.zig").GameContext;
 const MutableGameContext = @import("../context.zig").MutableGameContext;
 const std = @import("std");
@@ -21,11 +21,10 @@ pub const ScoresHud = struct {
             self.flash_timer = 0;
         }
     }
-
     pub fn draw(self: *const @This(), ctx: GameContext) void {
         const text_grid = ctx.text_grid;
 
-        const arcade_font = ctx.renderer.asset_manager.getAsset(Font, "main");
+        const arcade_font = ctx.assets_manager.getAsset(Font, "main");
 
         const pos_1up = text_grid.getPosition(0, 0);
         ctx.renderer.drawText("  1UP", pos_1up, text_grid.font_size, Color.red, arcade_font);

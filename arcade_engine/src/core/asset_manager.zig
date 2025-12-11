@@ -1,6 +1,6 @@
 const std = @import("std");
 const rl = @import("raylib");
-const types = @import("types.zig");
+const types = @import("../types.zig");
 pub const Texture = types.Texture;
 pub const Sound = types.Sound;
 pub const Font = types.Font;

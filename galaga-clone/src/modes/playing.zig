@@ -1,20 +1,20 @@
 const std = @import("std");
-const r = @import("renderer");
+const engine = @import("arcade_engine");
 
 const LevelDefinition = @import("../level/level_definition.zig");
 const LevelManager = @import("../level/level_manager.zig").LevelManager;
 const SpawnResult = LevelDefinition.SpawnResult;
 const PatternType = LevelDefinition.PatternType;
-const Input = r.types.Input;
-const Color = r.types.Color;
-const Vec2 = r.types.Vec2;
-const TextGrid = r.TextGrid;
-const Texture = r.types.Texture;
-const FormationGrid = r.FormationGrid;
+const Input = engine.types.Input;
+const Color = engine.types.Color;
+const Vec2 = engine.types.Vec2;
+const TextGrid = engine.spatial.TextGrid;
+const Texture = engine.types.Texture;
+const FormationGrid = engine.spatial.FormationGrid;
 const SpriteType = @import("../graphics/sprite.zig").SpriteType;
 const MutableGameContext = @import("../context.zig").MutableGameContext;
 const GameContext = @import("../context.zig").GameContext;
-const Key = r.types.Key;
+const Key = engine.types.Key;
 const LevelIndicator = @import("../ui/level_indicator.zig").LevelIndicator;
 const LifeIndicator = @import("../ui/life_indicator.zig").LifeIndicator;
 const common = @import("common.zig");
@@ -270,7 +270,7 @@ pub const Playing = struct {
     }
 
     fn drawPlayer(self: *const @This(), ctx: GameContext) void {
-        const tex = ctx.renderer.asset_manager.getAsset(Texture, "sprites") orelse return;
+        const tex = ctx.assets_manager.getAsset(Texture, "sprites") orelse return;
         const sprite = ctx.sprite_atlas.getSprite(.player);
         if (sprite.idle_count > 0) {
             const frame = sprite.idle_frames[0];
@@ -278,9 +278,9 @@ pub const Playing = struct {
             ctx.renderer.drawSprite(tex, frame, screen_pos, Color.white);
         }
     }
-    // Add this function!
+
     fn drawEnemies(self: *const @This(), ctx: GameContext) void {
-        const tex = ctx.renderer.asset_manager.getAsset(Texture, "sprites") orelse return;
+        const tex = ctx.assets_manager.getAsset(Texture, "sprites") orelse return;
 
         for (self.enemies.items) |*enemy| {
             const sprite = ctx.sprite_atlas.getSprite(enemy.enemy_type);
@@ -293,7 +293,7 @@ pub const Playing = struct {
     }
 
     fn drawBullets(self: *const @This(), ctx: GameContext) void {
-        const tex = ctx.renderer.asset_manager.getAsset(Texture, "sprites") orelse return;
+        const tex = ctx.assets_manager.getAsset(Texture, "sprites") orelse return;
 
         for (self.bullets.items) |*bullet| {
             const sprite_type: SpriteType = switch (bullet.owner) {
@@ -311,7 +311,7 @@ pub const Playing = struct {
     }
 
     fn drawExplosions(self: *const @This(), ctx: GameContext) void {
-        const tex = ctx.renderer.asset_manager.getAsset(Texture, "sprites") orelse return;
+        const tex = ctx.assets_manager.getAsset(Texture, "sprites") orelse return;
 
         for (self.explosions.items) |*explosion| {
             const sprite = ctx.sprite_atlas.getSprite(explosion.getSpriteType());

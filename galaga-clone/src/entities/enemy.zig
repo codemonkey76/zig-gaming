@@ -1,8 +1,7 @@
 const std = @import("std");
-const r = @import("renderer");
-const Vec2 = r.types.Vec2;
-const PatternType = r.PatternType;
-const PathDefinition = r.PathDefinition;
+const engine = @import("arcade_engine");
+const Vec2 = engine.types.Vec2;
+const PathDefinition = engine.level.PathDefinition;
 const SpriteType = @import("../graphics/sprite.zig").SpriteType;
 const SpawnResult = @import("../level/level_definition.zig").SpawnResult;
 

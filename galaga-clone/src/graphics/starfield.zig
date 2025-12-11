@@ -1,6 +1,7 @@
-const Color = @import("renderer").types.Color;
-const Vec2 = @import("renderer").types.Vec2;
-const Rect = @import("renderer").types.Rect;
+const engine = @import("arcade_engine");
+const Color = engine.types.Color;
+const Vec2 = engine.types.Vec2;
+const Rect = engine.types.Rect;
 const std = @import("std");
 
 const Star = struct {

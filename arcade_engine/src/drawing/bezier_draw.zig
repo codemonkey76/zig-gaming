@@ -1,5 +1,5 @@
 const Bezier = @import("../math/bezier.zig").Bezier;
-const types = @import("../core/types.zig");
+const types = @import("../types.zig");
 const Vec2 = types.Vec2;
 const Color = types.Color;
 

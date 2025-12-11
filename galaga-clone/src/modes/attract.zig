@@ -1,9 +1,10 @@
 const std = @import("std");
-const Input = @import("renderer").types.Input;
-const Color = @import("renderer").types.Color;
-const Font = @import("renderer").types.Font;
-const Key = @import("renderer").types.Key;
-const TextGrid = @import("renderer").TextGrid;
+const engine = @import("arcade_engine");
+const Input = engine.types.Input;
+const Color = engine.types.Color;
+const Font = engine.types.Font;
+const Key = engine.types.Key;
+const TextGrid = engine.spatial.TextGrid;
 const GameContext = @import("../context.zig").GameContext;
 const MutableGameContext = @import("../context.zig").MutableGameContext;
 

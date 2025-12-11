@@ -1,5 +1,6 @@
 const std = @import("std");
-const Input = @import("renderer").types.Input;
+const engine = @import("arcade_engine");
+const Input = engine.types.Input;
 const AttractMode = @import("modes/attract.zig").Attract;
 const PlayingMode = @import("modes/playing.zig").Playing;
 const HighScoreMode = @import("modes/high_score.zig").HighScore;

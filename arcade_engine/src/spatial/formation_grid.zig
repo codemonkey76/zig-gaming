@@ -1,6 +1,7 @@
 const std = @import("std");
 
-const Vec2 = @import("../core/types.zig").Vec2;
+const Vec2 = @import("../types.zig").Vec2;
+const FormationConfig = @import("formation_config.zig").FormationConfig;
 
 pub const FormationMode = enum {
     /// Formation moves side-to-side, stays compact while ships are joining
@@ -10,13 +11,6 @@ pub const FormationMode = enum {
     pulse,
 };
 
-pub const FormationConfig = struct {
-    sway_speed: f32 = 0.1, // cycles per second
-    sway_amplitude: f32 = 0.06,
-
-    pulse_speed: f32 = 0.2,
-    pulse_amplitude: f32 = 0.15,
-};
 pub const FormationGrid = struct {
     cols: u32,
     rows: u32,

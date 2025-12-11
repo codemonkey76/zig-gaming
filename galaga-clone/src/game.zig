@@ -1,8 +1,11 @@
 const std = @import("std");
-const r = @import("renderer");
+const engine = @import("arcade_engine");
 
-const Renderer = r.Renderer;
-const Input = r.types.Input;
+const Window = engine.core.Window;
+const Renderer = engine.core.Renderer;
+const InputManager = engine.input.InputManager;
+const AssetManager = engine.core.AssetManager;
+const Input = engine.types.Input;
 
 const GameState = @import("game_state.zig").GameState;
 const Context = @import("context.zig");
@@ -13,7 +16,10 @@ const Starfield = @import("graphics/starfield.zig").Starfield;
 
 pub const Game = struct {
     allocator: std.mem.Allocator,
-    renderer: *Renderer,
+    window: *Window,
+    renderer: *const Renderer,
+    input_manager: *InputManager,
+    assets_manager: *AssetManager,
 
     game_state: GameState,
     assets: Assets,
@@ -22,8 +28,14 @@ pub const Game = struct {
     scores_hud: ScoresHud,
     starfield: Starfield,
 
-    pub fn init(allocator: std.mem.Allocator, renderer: *Renderer) !Game {
-        const assets = try Assets.init(renderer);
+    pub fn init(
+        allocator: std.mem.Allocator,
+        window: *Window,
+        renderer: *const Renderer,
+        input_manager: *InputManager,
+        assets_manager: *AssetManager,
+    ) !Game {
+        const assets = try Assets.init(window, renderer, assets_manager);
 
         var mode_manager = try ModeManager.init(allocator);
         errdefer mode_manager.deinit();
@@ -38,7 +50,10 @@ pub const Game = struct {
 
         var game = Game{
             .allocator = allocator,
+            .window = window,
             .renderer = renderer,
+            .input_manager = input_manager,
+            .assets_manager = assets_manager,
             .game_state = GameState.init(),
             .assets = assets,
             .mode_manager = mode_manager,
@@ -82,15 +97,19 @@ pub const Game = struct {
         self.scores_hud.draw(ctx);
         self.starfield.draw(ctx);
         self.mode_manager.draw(ctx);
+        self.drawDebug(ctx);
     }
 
-    pub fn drawDebug(self: *const Game) void {
-        self.mode_manager.drawDebug(self.getContext());
+    fn drawDebug(self: *const Game, ctx: Context.GameContext) void {
+        self.mode_manager.drawDebug(ctx);
     }
 
     fn getContext(self: *const Game) Context.GameContext {
         return .{
-            .renderer = @constCast(self.renderer),
+            .window = self.window,
+            .renderer = self.renderer,
+            .input_manager = self.input_manager,
+            .assets_manager = self.assets_manager,
             .text_grid = &self.assets.text_grid,
             .formation_grid = &self.assets.formation_grid,
             .sprite_atlas = &self.assets.sprite_atlas,
@@ -100,7 +119,10 @@ pub const Game = struct {
 
     fn getMutableContext(self: *Game) Context.MutableGameContext {
         return .{
+            .window = self.window,
             .renderer = self.renderer,
+            .input_manager = self.input_manager,
+            .assets_manager = self.assets_manager,
             .text_grid = &self.assets.text_grid,
             .formation_grid = &self.assets.formation_grid,
             .sprite_atlas = &self.assets.sprite_atlas,
@@ -124,8 +146,8 @@ pub const Game = struct {
     }
 
     fn registerHandlers(self: *Game) void {
-        self.renderer.input_manager.registerKey(r.types.Key.one);
-        self.renderer.input_manager.registerKey(r.types.Key.two);
-        self.renderer.input_manager.registerKey(r.types.Key.five);
+        self.input_manager.registerKey(engine.types.Key.one);
+        self.input_manager.registerKey(engine.types.Key.two);
+        self.input_manager.registerKey(engine.types.Key.five);
     }
 };
