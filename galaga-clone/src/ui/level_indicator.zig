@@ -1,9 +1,11 @@
-const GameContext = @import("game.zig").GameContext;
-const SpriteType = @import("sprite.zig").SpriteType;
-const Vec2 = @import("renderer").types.Vec2;
-const Texture = @import("renderer").types.Texture;
-const Color = @import("renderer").types.Color;
-pub const TILE_SIZE: f32 = 16.0;
+const GameContext = @import("../context.zig").GameContext;
+const SpriteType = @import("../graphics/sprite.zig").SpriteType;
+const r = @import("renderer");
+const Vec2 = r.types.Vec2;
+const Texture = r.types.Texture;
+const Color = r.types.Color;
+const c = @import("../constants.zig");
+
 pub const LevelIndicator = struct {
     current_stage: u32 = 1,
 
@@ -17,50 +19,50 @@ pub const LevelIndicator = struct {
 
     pub fn draw(self: *const @This(), ctx: GameContext) void {
         const markers = LevelMarkers.init(self.current_stage);
-        const total_width = ((@as(f32, @floatFromInt(markers.level_1 + markers.level_5)) * TILE_SIZE / 2) +
-            (@as(f32, @floatFromInt(markers.level_10 + markers.level_20 + markers.level_30 + markers.level_50)) * TILE_SIZE)) *
+        const total_width = ((@as(f32, @floatFromInt(markers.level_1 + markers.level_5)) * c.TILE_SIZE / 2) +
+            (@as(f32, @floatFromInt(markers.level_10 + markers.level_20 + markers.level_30 + markers.level_50)) * c.TILE_SIZE)) *
             ctx.renderer.config.ssaa_scale;
 
         const total_width_norm = total_width / ctx.renderer.render_width;
 
         const start_x: f32 = 1.0 - total_width_norm;
-        const start_y: f32 = 1.0 - TILE_SIZE / ctx.renderer.render_height;
+        const start_y: f32 = 1.0 - c.TILE_SIZE / ctx.renderer.render_height;
 
         var x = start_x;
         var i: u32 = 0;
         while (i < markers.level_50) : (i += 1) {
             self.drawLevelMarker(ctx, .level_50, Vec2{ .x = x, .y = start_y });
-            x += TILE_SIZE * ctx.renderer.config.ssaa_scale / ctx.renderer.render_width;
+            x += c.TILE_SIZE * ctx.renderer.config.ssaa_scale / ctx.renderer.render_width;
         }
 
         i = 0;
         while (i < markers.level_30) : (i += 1) {
             self.drawLevelMarker(ctx, .level_30, Vec2{ .x = x, .y = start_y });
-            x += TILE_SIZE * ctx.renderer.config.ssaa_scale / ctx.renderer.render_width;
+            x += c.TILE_SIZE * ctx.renderer.config.ssaa_scale / ctx.renderer.render_width;
         }
 
         i = 0;
         while (i < markers.level_20) : (i += 1) {
             self.drawLevelMarker(ctx, .level_20, Vec2{ .x = x, .y = start_y });
-            x += TILE_SIZE * ctx.renderer.config.ssaa_scale / ctx.renderer.render_width;
+            x += c.TILE_SIZE * ctx.renderer.config.ssaa_scale / ctx.renderer.render_width;
         }
 
         i = 0;
         while (i < markers.level_10) : (i += 1) {
             self.drawLevelMarker(ctx, .level_10, Vec2{ .x = x, .y = start_y });
-            x += TILE_SIZE * ctx.renderer.config.ssaa_scale / ctx.renderer.render_width;
+            x += c.TILE_SIZE * ctx.renderer.config.ssaa_scale / ctx.renderer.render_width;
         }
 
         i = 0;
         while (i < markers.level_5) : (i += 1) {
             self.drawLevelMarker(ctx, .level_5, Vec2{ .x = x, .y = start_y });
-            x += TILE_SIZE * ctx.renderer.config.ssaa_scale / 2 / ctx.renderer.render_width;
+            x += c.TILE_SIZE * ctx.renderer.config.ssaa_scale / 2 / ctx.renderer.render_width;
         }
 
         i = 0;
         while (i < markers.level_1) : (i += 1) {
             self.drawLevelMarker(ctx, .level_1, Vec2{ .x = x, .y = start_y });
-            x += TILE_SIZE * ctx.renderer.config.ssaa_scale / 2 / ctx.renderer.render_width;
+            x += c.TILE_SIZE * ctx.renderer.config.ssaa_scale / 2 / ctx.renderer.render_width;
         }
     }
 

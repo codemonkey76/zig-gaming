@@ -1,7 +1,8 @@
-const GameContext = @import("game.zig").GameContext;
-const Vec2 = @import("renderer").types.Vec2;
-const Color = @import("renderer").types.Color;
-const Texture = @import("renderer").types.Texture;
+const GameContext = @import("../context.zig").GameContext;
+const r = @import("renderer");
+const Vec2 = r.types.Vec2;
+const Color = r.types.Color;
+const Texture = r.types.Texture;
 const TILE_SIZE: f32 = 16.0;
 
 pub const LifeIndicator = struct {

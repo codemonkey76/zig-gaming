@@ -37,7 +37,7 @@ pub const InputManager = struct {
     }
 
     pub fn unregisterMouseButton(self: *InputManager, button: MouseButton) void {
-        _ = self.registered_mouse_butons.remove(button);
+        _ = self.registered_mouse_buttons.remove(button);
     }
 
     pub fn poll(self: *const @This()) Input {
@@ -45,6 +45,7 @@ pub const InputManager = struct {
         var mouse_buttons_down = std.EnumSet(MouseButton).initEmpty();
         var mouse_buttons_released = std.EnumSet(MouseButton).initEmpty();
         var keys_pressed = [_]bool{false} ** 512;
+        var keys_down = [_]bool{false} ** 512;
 
         var it = self.registered_mouse_buttons.iterator();
 
@@ -65,12 +66,14 @@ pub const InputManager = struct {
         }
 
         var key_it = self.registered_keys.keyIterator();
-
         while (key_it.next()) |key| {
-            if (rl.isKeyPressed(key.*)) {
-                const index: usize = @intCast(@intFromEnum(key.*));
-                if (index < 512) {
+            const index: usize = @intCast(@intFromEnum(key.*));
+            if (index < 512) {
+                if (rl.isKeyPressed(key.*)) {
                     keys_pressed[index] = true;
+                }
+                if (rl.isKeyDown(key.*)) { // ← Check this OUTSIDE the isKeyPressed block
+                    keys_down[index] = true;
                 }
             }
         }
@@ -81,6 +84,7 @@ pub const InputManager = struct {
             .mouse_buttons_down = mouse_buttons_down,
             .mouse_buttons_released = mouse_buttons_released,
             .keys_pressed = keys_pressed,
+            .keys_down = keys_down,
         };
     }
 

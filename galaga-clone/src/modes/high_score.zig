@@ -3,8 +3,8 @@ const Input = @import("renderer").types.Input;
 const Color = @import("renderer").types.Color;
 const Key = @import("renderer").types.Key;
 const TextGrid = @import("renderer").TextGrid;
-const MutableGameContext = @import("../game.zig").MutableGameContext;
-const GameContext = @import("../game.zig").GameContext;
+const MutableGameContext = @import("../context.zig").MutableGameContext;
+const GameContext = @import("../context.zig").GameContext;
 const common = @import("common.zig");
 
 pub const HighScore = struct {

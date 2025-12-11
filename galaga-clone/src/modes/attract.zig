@@ -4,8 +4,8 @@ const Color = @import("renderer").types.Color;
 const Font = @import("renderer").types.Font;
 const Key = @import("renderer").types.Key;
 const TextGrid = @import("renderer").TextGrid;
-const GameContext = @import("../game.zig").GameContext;
-const MutableGameContext = @import("../game.zig").MutableGameContext;
+const GameContext = @import("../context.zig").GameContext;
+const MutableGameContext = @import("../context.zig").MutableGameContext;
 
 const TRANSITION_DELAY = 5.0;
 const FONT_SIZE = 16.0;

@@ -1,0 +1,9 @@
+const types = @import("types.zig");
+pub const NUM_LIVES = 3;
+pub const FIRST_EXTRA_LIFE = 30_000;
+pub const SECOND_EXTRA_LIFE = 100_000;
+pub const RECURRING_EXTRA_LIFE = 100_000;
+pub const MAX_EXTRA_LIVES = 15;
+pub const DIFFICULTY: types.GameDifficulty = .easy;
+pub const FONT_SIZE: i32 = 18;
+pub const TILE_SIZE: f32 = 16.0;

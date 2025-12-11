@@ -1,4 +1,4 @@
-const MutableGameContext = @import("../game.zig").MutableGameContext;
+const MutableGameContext = @import("../context.zig").MutableGameContext;
 const Key = @import("renderer").types.Key;
 
 pub fn registerKeys(ctx: MutableGameContext, keys: []const Key) void {

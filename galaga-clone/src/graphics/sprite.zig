@@ -21,7 +21,12 @@ pub const SpriteType = enum {
     enterprise,
 
     // Projectiles
-    bullet,
+    bullet_player,
+    bullet_enemy,
+
+    // Explosions
+    explosion_player,
+    explosion_enemy,
 
     level_1,
     level_5,
@@ -38,7 +43,7 @@ pub const Flip = enum {
     both,
 };
 
-pub const MAX_IDLE_FRAMES: usize = 4;
+pub const MAX_IDLE_FRAMES: usize = 6;
 pub const MAX_ROT_FRAMES: usize = 6;
 pub const SpriteFrame = Rect;
 pub const SpriteResult = struct {
@@ -260,6 +265,41 @@ pub const SpriteAtlas = struct {
                 cell(4, 11),
                 cell(5, 11),
             }),
+        );
+
+        sprites.set(
+            .bullet_player,
+            try createSprite(.bullet_player, &[_]SpriteFrame{
+                .{ .x = 307, .y = 118, .width = 16, .height = 16 },
+            }, &[_]SpriteFrame{}),
+        );
+
+        sprites.set(
+            .bullet_enemy,
+            try createSprite(.bullet_enemy, &[_]SpriteFrame{
+                .{ .x = 307, .y = 136, .width = 16, .height = 16 },
+            }, &[_]SpriteFrame{}),
+        );
+
+        sprites.set(
+            .explosion_player,
+            try createSprite(.explosion_player, &[_]SpriteFrame{
+                .{ .x = 145, .y = 1, .width = 32, .height = 32 },
+                .{ .x = 179, .y = 1, .width = 32, .height = 32 },
+                .{ .x = 213, .y = 1, .width = 32, .height = 32 },
+                .{ .x = 247, .y = 1, .width = 32, .height = 32 },
+            }, &[_]SpriteFrame{}),
+        );
+
+        sprites.set(
+            .explosion_enemy,
+            try createSprite(.explosion_enemy, &[_]SpriteFrame{
+                .{ .x = 289, .y = 1, .width = 32, .height = 32 },
+                .{ .x = 323, .y = 1, .width = 32, .height = 32 },
+                .{ .x = 357, .y = 1, .width = 32, .height = 32 },
+                .{ .x = 391, .y = 1, .width = 32, .height = 32 },
+                .{ .x = 425, .y = 1, .width = 32, .height = 32 },
+            }, &[_]SpriteFrame{}),
         );
 
         sprites.set(.level_1, try createSprite(.level_1, &[_]SpriteFrame{.{ .x = 307, .y = 172, .width = 8, .height = 16 }}, &[_]SpriteFrame{}));

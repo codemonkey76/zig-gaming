@@ -26,6 +26,7 @@ pub const Input = struct {
     mouse_buttons_down: std.EnumSet(MouseButton),
     mouse_buttons_released: std.EnumSet(MouseButton),
     keys_pressed: [512]bool,
+    keys_down: [512]bool,
 
     pub fn isMouseButtonPressed(self: @This(), button: MouseButton) bool {
         return self.mouse_buttons_pressed.contains(button);
@@ -42,5 +43,10 @@ pub const Input = struct {
     pub fn isKeyPressed(self: @This(), key: Key) bool {
         const index: usize = @intCast(@intFromEnum(key));
         return if (index < self.keys_pressed.len) self.keys_pressed[index] else false;
+    }
+
+    pub fn isKeyDown(self: @This(), key: Key) bool {
+        const index: usize = @intCast(@intFromEnum(key));
+        return if (index < self.keys_down.len) self.keys_down[index] else false;
     }
 };
