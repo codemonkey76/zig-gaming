@@ -1,0 +1,16 @@
+.{
+    .name = .path_gen,
+    .version = "0.0.0",
+    .fingerprint = 0xb1346b1f78b946d9,
+    .minimum_zig_version = "0.15.2",
+    .dependencies = .{
+        .arcade_engine = .{
+            .path = "../arcade_engine",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

@@ -5,12 +5,12 @@ pub const MAGIC: [4]u8 = .{ 'G', 'P', 'T', 'H' };
 pub const VERSION: u8 = 1;
 
 pub const PathHeader = packed struct {
-    magic: [4]u8,
+    magic: u32,
     version: u8,
     name_length: u8,
     duration_bits: u32,
     point_count: u16,
-    reserved: [8]u8,
+    reserved: u64,
 
     pub fn getDuration(self: @This()) f32 {
         return @bitCast(self.duration_bits);
@@ -18,6 +18,14 @@ pub const PathHeader = packed struct {
 
     pub fn setDuration(self: *@This(), value: f32) void {
         self.duration_bits = @bitCast(value);
+    }
+    pub fn setMagic(self: *@This()) void {
+        self.magic = @bitCast(MAGIC);
+    }
+
+    pub fn checkMagic(self: @This()) bool {
+        const magic_bytes: [4]u8 = @bitCast(self.magic);
+        return std.mem.eql(u8, &magic_bytes, &MAGIC);
     }
 };
 

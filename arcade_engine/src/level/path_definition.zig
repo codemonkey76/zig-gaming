@@ -3,7 +3,6 @@ const BezierSegment = @import("bezier_segment.zig").BezierSegment;
 
 pub const PathDefinition = struct {
     control_points: []const Vec2,
-    total_duration: f32,
 
     pub fn getSegmentCount(self: @This()) usize {
         if (self.control_points.len < 4) return 0;

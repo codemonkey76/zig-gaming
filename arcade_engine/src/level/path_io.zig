@@ -9,14 +9,13 @@ pub const PathIO = struct {
         defer file.close();
 
         var header = path_format.PathHeader{
-            .magic = path_format.MAGIC,
+            .magic = undefined,
             .version = path_format.VERSION,
             .name_length = @intCast(name.len),
-            .duration_bits = undefined,
             .point_count = @intCast(path.control_points.len),
-            .reserved = std.mem.zeroes([8]u8),
+            .reserved = 0,
         };
-        header.setDuration(path.total_duration);
+        header.setMagic();
 
         try file.writeAll(std.mem.asBytes(&header));
         try file.writeAll(name);
@@ -46,7 +45,7 @@ pub const PathIO = struct {
         const header_bytes = try file.readAll(std.mem.asBytes(&header));
         if (header_bytes != @sizeOf(path_format.PathHeader)) return error.InvalidFile;
 
-        if (!std.mem.eql(u8, &header.magic, &path_format.MAGIC)) return error.InvalidMagic;
+        if (!header.checkMagic()) return error.InvalidMagic;
         if (header.version != path_format.VERSION) return error.UnsupportedVersion;
 
         const name = try allocator.alloc(u8, header.name_length);
@@ -69,7 +68,6 @@ pub const PathIO = struct {
             .name = name,
             .path = PathDefinition{
                 .control_points = control_points,
-                .total_duration = header.getDuration(),
             },
             .control_points_owned = control_points,
         };

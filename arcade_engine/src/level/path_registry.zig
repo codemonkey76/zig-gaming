@@ -50,7 +50,7 @@ pub const PathRegistry = struct {
             var path_buf: [256]u8 = undefined;
             const full_path = try std.fmt.bufPrint(&path_buf, "{s}/{s}", .{ dir_path, entry.name });
 
-            const loaded = path_io.loadPath(self.allocator, full_path) catch |err| {
+            const loaded = path_io.PathIO.loadPath(self.allocator, full_path) catch |err| {
                 std.debug.print("Failed to load path {s}: {}\n", .{ entry.name, err });
                 continue;
             };
@@ -75,7 +75,7 @@ pub const PathRegistry = struct {
         var filename_buf: [256]u8 = undefined;
         const filename = try std.fmt.bufPrint(&filename_buf, "assets/paths/{s}.gpath", .{name});
 
-        try path_io.savePath(path, name, filename);
+        try path_io.PathIO.savePath(path, name, filename);
 
         const name_copy = try self.allocator.dupe(u8, name);
         errdefer self.allocator.free(name_copy);
@@ -85,12 +85,12 @@ pub const PathRegistry = struct {
 
         const path_copy = PathDefinition{
             .control_points = points_copy,
-            .total_duration = path.total_duration,
         };
 
         if (self.paths.fetchRemove(name)) |kv| {
             self.allocator.free(kv.key);
-            kv.value.deinit(self.allocator);
+            var value_copy = kv.value;
+            value_copy.deinit(self.allocator);
         }
 
         try self.paths.put(name_copy, PathEntry{
@@ -126,7 +126,8 @@ pub const PathRegistry = struct {
 
         if (self.paths.fetchRemove(name)) |kv| {
             self.allocator.free(kv.key);
-            kv.value.deinit(self.allocator);
+            var kv_value = kv.value;
+            kv_value.deinit(self.allocator);
         }
 
         std.debug.print("Deleted path: {s}\n", .{name});
