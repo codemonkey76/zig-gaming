@@ -2,10 +2,11 @@ const Bezier = @import("../math/bezier.zig").Bezier;
 const types = @import("../types.zig");
 const Vec2 = types.Vec2;
 const Color = types.Color;
+const Renderer = @import("../core/renderer.zig").Renderer;
 
 /// Draw a bezier curve with the given number of line segments
 pub fn drawBezierCurve(
-    renderer: anytype,
+    renderer: *const Renderer,
     bezier: *const Bezier,
     color: Color,
     num_segments: usize,
@@ -23,13 +24,13 @@ pub fn drawBezierCurve(
         const p1 = renderer.normToRender(norm_p1);
         const p2 = renderer.normToRender(norm_p2);
 
-        renderer.drawLine(p1, p2, color);
+        Renderer.drawLine(p1, p2, color);
     }
 }
 
 /// Draw the control polygon (lines connecting control points)
 pub fn drawControlPolygon(
-    renderer: anytype,
+    renderer: *const Renderer,
     points: []const Vec2,
     color: Color,
 ) void {
@@ -38,19 +39,19 @@ pub fn drawControlPolygon(
     for (0..points.len - 1) |j| {
         const p1 = renderer.normToRender(points[j]);
         const p2 = renderer.normToRender(points[j + 1]);
-        renderer.drawLine(p1, p2, color);
+        Renderer.drawLine(p1, p2, color);
     }
 }
 
 /// Draw a control point with border
 pub fn drawControlPoint(
-    renderer: anytype,
+    renderer: *const Renderer,
     norm_point: Vec2,
     radius: f32,
     color: Color,
     border_color: Color,
 ) void {
     const screen_point = renderer.normToRender(norm_point);
-    renderer.drawCircle(screen_point, radius, color);
-    renderer.drawCircle(screen_point, radius - 2, border_color);
+    Renderer.drawCircle(screen_point, radius, color);
+    Renderer.drawCircle(screen_point, radius - 2, border_color);
 }

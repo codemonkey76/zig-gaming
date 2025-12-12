@@ -65,7 +65,8 @@ pub const PathRegistry = struct {
 
             self.allocator.free(loaded.name);
 
-            std.debug.print("Loaded path: {s}\n", .{name_copy});
+            std.debug.print("Loaded path: {s}\n", .{entry.name});
+            std.debug.print("Struct: {}\n", .{entry});
         }
     }
 
