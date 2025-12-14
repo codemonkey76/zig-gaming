@@ -14,15 +14,19 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-linux
             artifact_name: sketch-linux-x64
+            install_deps: true
           - os: ubuntu-latest
             target: x86_64-windows
             artifact_name: sketch-windows-x64.exe
+            install_deps: false
           - os: macos-latest
             target: x86_64-macos
             artifact_name: sketch-macos-x64
+            install_deps: false
           - os: macos-latest
             target: aarch64-macos
             artifact_name: sketch-macos-arm64
+            install_deps: false
 
     runs-on: ${{ matrix.os }}
 
@@ -30,7 +34,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Linux dependencies
-        if: matrix.os == 'ubuntu-latest' && matrix.target == 'x86_64-linux'
+        if: matrix.install_deps == true
         run: |
           sudo apt-get update
           sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libxfixes-dev libgl1-mesa-dev
