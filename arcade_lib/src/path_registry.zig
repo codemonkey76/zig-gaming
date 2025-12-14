@@ -62,7 +62,16 @@ pub const PathRegistry = struct {
     }
     pub fn expandPath(allocator: std.mem.Allocator, path: []const u8) ![]const u8 {
         if (path.len > 0 and path[0] == '~') {
-            const home = std.posix.getenv("HOME") orelse return error.HomeNotFound;
+            const home = std.process.getEnvVarOwned(allocator, "HOME") catch |err| blk: {
+                // On Windows, try USERPROFILE instead
+                if (@import("builtin").os.tag == .windows) {
+                    break :blk std.process.getEnvVarOwned(allocator, "USERPROFILE") catch {
+                        return error.HomeNotFound;
+                    };
+                }
+                return err;
+            };
+            defer allocator.free(home);
 
             if (path.len == 1) {
                 // Just "~"

@@ -11,7 +11,7 @@ pub fn main() !void {
     const config_path = try config.getConfigPath(alloc, "Sketch");
     defer alloc.free(config_path);
 
-    config.writeDefaultConfig(config_path) catch |err| switch (err) {
+    config.writeDefaultConfig(config_path, "") catch |err| switch (err) {
         error.PathAlreadyExists => {},
         else => return err,
     };

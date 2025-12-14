@@ -25,15 +25,28 @@ pub fn getConfigPath(allocator: std.mem.Allocator, app_name: []const u8) ![]cons
     return try std.fs.path.join(allocator, &.{ config_dir, "config.zon" });
 }
 
-pub fn writeDefaultConfig(path: []const u8) !void {
-    const config_content =
-        \\.{
+pub fn writeDefaultConfig(path: []const u8, asset_path: []const u8) !void {
+    const builtin = @import("builtin");
+
+    const default_asset_path = if (asset_path.len == 0) blk: {
+        if (builtin.os.tag == .windows) {
+            break :blk "%USERPROFILE%\\assets\\paths";
+        } else {
+            break :blk "~/assets/paths";
+        }
+    } else asset_path;
+
+    var buffer: [1024]u8 = undefined;
+
+    const config_content = try std.fmt.bufPrint(&buffer,
+        \\.{{
         \\  .app_name = "Sketch",
         \\  .version = "1.0.0",
-        \\  .asset_path = "~/assets/paths",
+        \\  .asset_path = "{s}",
         \\  .debug = true,
-        \\}
-    ;
+        \\}}
+        \\
+    , .{default_asset_path});
 
     const file = try std.fs.createFileAbsolute(path, .{});
     defer file.close();
