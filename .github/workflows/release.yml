@@ -33,7 +33,11 @@ jobs:
         if: matrix.target == 'x86_64-linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libxfixes-dev libgl1-mesa-dev
+          sudo apt-get install -y \
+            libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev \
+            libxi-dev libxext-dev libxfixes-dev libgl1-mesa-dev \
+            libx11-6 libxrandr2 libxinerama1 libxcursor1 libxi6 \
+            libxext6 libxfixes3 libxrender1
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
@@ -43,7 +47,7 @@ jobs:
       - name: Build for ${{ matrix.target }}
         run: |
           cd sketch
-          zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSmall
+          zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSmall --search-prefix /usr
 
       - name: Package binary
         run: |
