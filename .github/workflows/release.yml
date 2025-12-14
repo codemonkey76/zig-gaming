@@ -1,17 +1,31 @@
 name: Build Release
-
 on:
   push:
     tags:
       - "v*"
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-linux
+            artifact_name: sketch-linux-x64
+          - os: ubuntu-latest
+            target: x86_64-windows
+            artifact_name: sketch-windows-x64.exe
+          - os: macos-latest
+            target: x86_64-macos
+            artifact_name: sketch-macos-x64
+          - os: macos-latest
+            target: aarch64-macos
+            artifact_name: sketch-macos-arm64
+
+    runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -20,27 +34,41 @@ jobs:
         with:
           version: 0.15.2
 
-      - name: Build for Windows x64
+      - name: Build for ${{ matrix.target }}
         run: |
           cd sketch
-          zig build -Dtarget=x86_64-windows -Doptimize=ReleaseSmall
+          zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSmall
 
-      - name: Package binaries
+      - name: Package binary
         run: |
           mkdir -p releases
-          cp sketch/zig-out/bin/sketch.exe releases/sketch-x64.exe
+          if [ "${{ matrix.target }}" == "x86_64-windows" ]; then
+            cp sketch/zig-out/bin/sketch.exe releases/${{ matrix.artifact_name }}
+          else
+            cp sketch/zig-out/bin/sketch releases/${{ matrix.artifact_name }}
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: releases/${{ matrix.artifact_name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: releases
+          merge-multiple: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: releases/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts (for manual runs)
-        if: "!startsWith(github.ref, 'refs/tags/')"
-        uses: actions/upload-artifact@v4
-        with:
-          name: binaries
-          path: releases/*
