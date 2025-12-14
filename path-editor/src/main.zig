@@ -32,12 +32,6 @@ pub fn main() !void {
     });
     defer window.deinit();
 
-    const renderer = Renderer.init(
-        window.render_width,
-        window.render_height,
-        window.config.ssaa_scale,
-    );
-
     // Initialize input manager
     var input_manager = InputManager.init(allocator);
     defer input_manager.deinit();
@@ -68,7 +62,7 @@ pub fn main() !void {
     try registry.loadFromDirectory("assets/paths");
 
     // Initialize application state
-    var app_state = AppState.init(allocator);
+    var app_state = AppState.init(allocator, window.render_width, window.render_height);
     defer app_state.deinit();
 
     var path_list = PathListUI.init();
@@ -103,7 +97,7 @@ pub fn main() !void {
 
         // Handle editor-specific input
         if (app_state.isEditing()) {
-            try app_state.path_editor.handleInput(input, viewport, &renderer);
+            try app_state.path_editor.handleInput(input, viewport);
         }
 
         // Render
@@ -111,7 +105,6 @@ pub fn main() !void {
         try RenderSystem.render(
             allocator,
             &app_state,
-            &renderer,
             &path_list,
             &save_dialog,
             &registry,

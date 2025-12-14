@@ -18,11 +18,11 @@ pub const AppState = struct {
     current_path_name: [64]u8 = undefined,
     current_path_name_len: usize = 0,
 
-    pub fn init(allocator: std.mem.Allocator) AppState {
+    pub fn init(allocator: std.mem.Allocator, render_width: f32, render_height: f32) AppState {
         return .{
             .allocator = allocator,
             .mode = .viewing,
-            .path_editor = PathEditor.init(allocator),
+            .path_editor = PathEditor.init(allocator, render_width, render_height),
         };
     }
 

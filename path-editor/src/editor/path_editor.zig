@@ -14,11 +14,15 @@ pub const PathEditor = struct {
     bezier: Bezier,
     selected_point_index: ?usize = null,
     dragging: bool = false,
+    render_width: f32,
+    render_height: f32,
 
-    pub fn init(allocator: std.mem.Allocator) PathEditor {
+    pub fn init(allocator: std.mem.Allocator, render_width: f32, render_height: f32) PathEditor {
         return .{
             .allocator = allocator,
             .bezier = Bezier.init(allocator),
+            .render_width = render_width,
+            .render_height = render_height,
         };
     }
 
@@ -50,7 +54,6 @@ pub const PathEditor = struct {
         self: *PathEditor,
         input: Input,
         viewport: Viewport,
-        renderer: *const Renderer,
     ) !void {
         const mouse_in_viewport = viewport.contains(input.mouse_pos);
         if (!mouse_in_viewport) return;
@@ -66,7 +69,7 @@ pub const PathEditor = struct {
 
             // Check if clicking existing point
             for (self.bezier.points.items, 0..) |point, i| {
-                if (self.isPointNear(point, norm_pos, renderer, 10)) {
+                if (self.isPointNear(point, norm_pos, 10)) {
                     self.selected_point_index = i;
                     self.dragging = true;
                     clicked_point = true;
@@ -98,7 +101,7 @@ pub const PathEditor = struct {
         // Right click - delete point
         if (input.isMouseButtonPressed(.right)) {
             for (self.bezier.points.items, 0..) |point, i| {
-                if (self.isPointNear(point, norm_pos, renderer, 10)) {
+                if (self.isPointNear(point, norm_pos, 10)) {
                     self.bezier.removePoint(i);
                     if (self.selected_point_index) |sel| {
                         if (sel == i) {
@@ -117,12 +120,10 @@ pub const PathEditor = struct {
         self: *const PathEditor,
         point: Vec2,
         test_point: Vec2,
-        renderer: *const Renderer,
         threshold: f32,
     ) bool {
-        _ = self;
-        const render_point = renderer.normToRender(point);
-        const render_test = renderer.normToRender(test_point);
+        const render_point = self.normToRender(point);
+        const render_test = self.normToRender(test_point);
         const dx = render_point.x - render_test.x;
         const dy = render_point.y - render_test.y;
         const dist = @sqrt(dx * dx + dy * dy);
@@ -148,5 +149,12 @@ pub const PathEditor = struct {
             const color = if (is_selected) Color.red else Color.green;
             engine.drawing.drawControlPoint(renderer, point, 8, color, Color.white);
         }
+    }
+
+    fn normToRender(self: *const PathEditor, norm: Vec2) Vec2 {
+        return .{
+            .x = norm.x * self.render_width,
+            .y = norm.y * self.render_height,
+        };
     }
 };

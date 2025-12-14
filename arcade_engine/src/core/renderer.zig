@@ -7,18 +7,6 @@ const Vec2 = types.Vec2;
 const Font = types.Font;
 
 pub const Renderer = struct {
-    render_width: f32,
-    render_height: f32,
-    ssaa_scale: f32,
-
-    pub fn init(render_width: f32, render_height: f32, ssaa_scale: f32) Renderer {
-        return .{
-            .render_width = render_width,
-            .render_height = render_height,
-            .ssaa_scale = ssaa_scale,
-        };
-    }
-
     pub fn drawCircle(center: Vec2, radius: f32, color: Color) void {
         rl.drawCircleV(center, radius, color);
     }
@@ -74,12 +62,5 @@ pub const Renderer = struct {
         color: Color,
     ) void {
         rl.drawRectangleLinesEx(rect, thickness, color);
-    }
-
-    pub fn normToRender(self: *const Renderer, norm: Vec2) Vec2 {
-        return .{
-            .x = norm.x * self.render_width,
-            .y = norm.y * self.render_height,
-        };
     }
 };
