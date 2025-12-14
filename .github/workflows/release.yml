@@ -29,6 +29,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest' && matrix.target == 'x86_64-linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libxfixes-dev libgl1-mesa-dev
+
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
         with:
