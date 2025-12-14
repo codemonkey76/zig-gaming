@@ -1,5 +1,6 @@
 const std = @import("std");
 const Vec2 = @import("vec2.zig").Vec2;
+const AnchorPoint = @import("anchor_point.zig").AnchorPoint;
 const PathDefinition = @import("path_definition.zig").PathDefinition;
 const PathIO = @import("path_io.zig").PathIO;
 
@@ -7,12 +8,13 @@ pub const PathRegistry = struct {
     allocator: std.mem.Allocator,
     paths: std.StringHashMap(PathEntry),
 
-    const PathEntry = struct {
-        path: PathDefinition,
-        control_points_owned: []Vec2,
+    const Self = @This();
 
-        pub fn deinit(self: *@This(), allocator: std.mem.Allocator) void {
-            allocator.free(self.control_points_owned);
+    const PathEntry = struct {
+        anchors: []AnchorPoint,
+
+        pub fn deinit(self: *PathEntry, allocator: std.mem.Allocator) void {
+            allocator.free(self.anchors);
         }
     };
 
@@ -23,7 +25,7 @@ pub const PathRegistry = struct {
         };
     }
 
-    pub fn deinit(self: *@This()) void {
+    pub fn deinit(self: *Self) void {
         var it = self.paths.iterator();
         while (it.next()) |entry| {
             self.allocator.free(entry.key_ptr.*);
@@ -48,7 +50,7 @@ pub const PathRegistry = struct {
         return entry_name[0 .. entry_name.len - ext.len];
     }
 
-    pub fn loadFromDirectory(self: *@This(), dir_path: []const u8) !void {
+    pub fn loadFromDirectory(self: *Self, dir_path: []const u8) !void {
         var dir = std.fs.cwd().openDir(dir_path, .{ .iterate = true }) catch |err| {
             if (err == error.FileNotFound) {
                 std.debug.print("Path directory not found: {s}\n", .{dir_path});
@@ -72,7 +74,7 @@ pub const PathRegistry = struct {
             };
             errdefer {
                 self.allocator.free(loaded.name);
-                self.allocator.free(loaded.control_points_owned);
+                self.allocator.free(loaded.anchors);
             }
 
             const key = stemFromEntryName(entry.name);
@@ -88,8 +90,7 @@ pub const PathRegistry = struct {
             }
 
             try self.paths.put(key_copy, PathEntry{
-                .path = loaded.path,
-                .control_points_owned = loaded.control_points_owned,
+                .anchors = loaded.anchors,
             });
 
             self.allocator.free(loaded.name);
@@ -99,23 +100,19 @@ pub const PathRegistry = struct {
         }
     }
 
-    pub fn savePath(self: *@This(), name: []const u8, path: PathDefinition) !void {
+    pub fn savePath(self: *Self, name: []const u8, anchors: []const AnchorPoint) !void {
         std.fs.cwd().makePath("assets/paths") catch {};
 
         var filename_buf: [256]u8 = undefined;
         const filename = try std.fmt.bufPrint(&filename_buf, "assets/paths/{s}.gpath", .{name});
 
-        try PathIO.savePath(path, name, filename);
+        try PathIO.savePath(anchors, name, filename);
 
         const name_copy = try self.allocator.dupe(u8, name);
         errdefer self.allocator.free(name_copy);
 
-        const points_copy = try self.allocator.dupe(Vec2, path.control_points);
-        errdefer self.allocator.free(points_copy);
-
-        const path_copy = PathDefinition{
-            .control_points = points_copy,
-        };
+        const anchors_copy = try self.allocator.dupe(AnchorPoint, anchors);
+        errdefer self.allocator.free(anchors_copy);
 
         if (self.paths.fetchRemove(name)) |kv| {
             self.allocator.free(kv.key);
@@ -124,19 +121,18 @@ pub const PathRegistry = struct {
         }
 
         try self.paths.put(name_copy, PathEntry{
-            .path = path_copy,
-            .control_points_owned = points_copy,
+            .anchors = anchors_copy,
         });
 
         std.debug.print("Saved path: {s}\n", .{name_copy});
     }
 
-    pub fn getPath(self: *const @This(), name: []const u8) ?PathDefinition {
+    pub fn getPath(self: *const Self, name: []const u8) ?[]const AnchorPoint {
         const entry = self.paths.get(name) orelse return null;
-        return entry.path;
+        return entry.anchors;
     }
 
-    pub fn listPaths(self: *const @This(), allocator: std.mem.Allocator) ![][]const u8 {
+    pub fn listPaths(self: *const Self, allocator: std.mem.Allocator) ![][]const u8 {
         const names = try allocator.alloc([]const u8, self.paths.count());
 
         var it = self.paths.keyIterator();
@@ -149,7 +145,7 @@ pub const PathRegistry = struct {
         return names;
     }
 
-    pub fn deletePath(self: *@This(), name_in: []const u8) !void {
+    pub fn deletePath(self: *Self, name_in: []const u8) !void {
         const name = stripNul(name_in);
         var filename_buf: [256]u8 = undefined;
         const filename = try std.fmt.bufPrint(&filename_buf, "assets/paths/{s}.gpath", .{name});
@@ -164,7 +160,7 @@ pub const PathRegistry = struct {
         std.debug.print("Deleted path: {s}\n", .{name});
     }
 
-    pub fn renamePath(self: *@This(), old_name: []const u8, new_name: []const u8) !void {
+    pub fn renamePath(self: *Self, old_name: []const u8, new_name: []const u8) !void {
         const entry = self.paths.get(old_name) orelse return error.PathNotFound;
         try self.savePath(new_name, entry.path);
         try self.deletePath(old_name);

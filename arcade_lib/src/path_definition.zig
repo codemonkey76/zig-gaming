@@ -1,6 +1,7 @@
 const Vec2 = @import("vec2.zig").Vec2;
 const std = @import("std");
 const BezierSegment = @import("bezier_segment.zig").BezierSegment;
+const AnchorPoint = @import("anchor_point.zig").AnchorPoint;
 
 pub const PathDefinition = struct {
     control_points: []const Vec2,
@@ -73,6 +74,45 @@ pub const PathDefinition = struct {
                 return segment.evaluate(local_t);
             },
         }
+    }
+
+    pub fn fromAnchorPoints(allocator: std.mem.Allocator, anchors: []const AnchorPoint) ![]Vec2 {
+        if (anchors.len == 0) return &[_]Vec2{};
+        if (anchors.len == 1) return try allocator.dupe(Vec2, &[_]Vec2{anchors[0].pos});
+
+        // Each segment between two anchors needs 4 control points p0, p2, p2, p3
+        // With N anchors, we have N-1 segments
+        // Total control points: 4 + (N-2) * 3 = 1 + (N-1)*3
+        const segment_count = anchors.len - 1;
+        const control_count = 1 + segment_count * 3;
+        var control_points = try allocator.alloc(Vec2, control_count);
+
+        // First anchor's position
+        control_points[0] = anchors[0].pos;
+
+        for (0..segment_count) |i| {
+            const anchor_a = anchors[i];
+            const anchor_b = anchors[i + 1];
+
+            const base_idx = 1 + i * 3;
+
+            // Control point 1: anchor_a's outgoing handle (or anchor_a.pos if no handle)
+            control_points[base_idx] = if (anchor_a.handle_out) |h|
+                Vec2{ .x = anchor_a.pos.x + h.x, .y = anchor_a.pos.y + h.y }
+            else
+                anchor_a.pos;
+
+            // Control point 2: anchor_b's incoming handle (or anchor_b.pos if no handle)
+            control_points[base_idx + 1] = if (anchor_b.handle_in) |h|
+                Vec2{ .x = anchor_b.pos.x + h.x, .y = anchor_b.pos.y + h.y }
+            else
+                anchor_b.pos;
+
+            // Control point 3: anchor_b's position
+            control_points[base_idx + 2] = anchor_b.pos;
+        }
+
+        return control_points;
     }
 
     /// Convert a sequence of points into cubic Bezier control points
