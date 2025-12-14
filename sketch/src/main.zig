@@ -1,11 +1,23 @@
 const std = @import("std");
 const sketch = @import("sketch");
 const rl = @import("raylib");
+const config = sketch.config;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const alloc = gpa.allocator();
+
+    const config_path = try config.getConfigPath(alloc, "Sketch");
+    defer alloc.free(config_path);
+
+    config.writeDefaultConfig(config_path) catch |err| switch (err) {
+        error.PathAlreadyExists => {},
+        else => return err,
+    };
+
+    const cfg = try config.read(alloc, config_path);
+    defer cfg.deinit(alloc);
 
     rl.setConfigFlags(.{ .window_resizable = true });
 
@@ -17,7 +29,7 @@ pub fn main() !void {
     const font = try rl.loadFontEx("assets/fonts/inter/Inter_18pt-Regular.ttf", 18, null);
     rl.setTextureFilter(font.texture, rl.TextureFilter.point);
 
-    var model = sketch.models.AppModel.init(alloc, font);
+    var model = try sketch.models.AppModel.init(alloc, font, &cfg);
     defer model.deinit();
 
     var queue = std.ArrayList(sketch.models.AppMsg).empty;

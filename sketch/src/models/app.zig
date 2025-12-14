@@ -15,6 +15,7 @@ const PathList = @import("path_list.zig").PathList;
 const CreatePathModal = sketch.ui.modals.create_path;
 const text_input = sketch.ui.text_input;
 const toolbar = sketch.ui.toolbar;
+const Config = sketch.config.Config;
 
 const MARGIN = 6;
 
@@ -63,16 +64,20 @@ pub const AppModel = struct {
     button_state: button.State = .{},
     selected: u32 = 0,
     debug_log: bool = false,
+    config: *const Config,
 
     const Self = @This();
 
-    pub fn init(allocator: std.mem.Allocator, font: rl.Font) AppModel {
+    pub fn init(allocator: std.mem.Allocator, font: rl.Font, config: *const Config) !AppModel {
+        const paths = try arcade.PathRegistry.init(allocator, config.asset_path);
+
         var m: AppModel = .{
             .allocator = allocator,
             .font = font,
-            .paths = arcade.PathRegistry.init(allocator),
+            .paths = paths,
             .editor = PathEditor.init(allocator),
             .path_list = PathList.init(allocator),
+            .config = config,
         };
 
         m.reloadAll() catch {};
@@ -550,8 +555,8 @@ pub const AppModel = struct {
 
         // rebuild registry
         self.paths.deinit();
-        self.paths = arcade.PathRegistry.init(self.allocator);
-        try self.paths.loadFromDirectory("assets/paths");
+        self.paths = try arcade.PathRegistry.init(self.allocator, self.config.asset_path);
+        try self.paths.load();
         try self.path_list.rebuild(&self.paths);
 
         // select first path if present

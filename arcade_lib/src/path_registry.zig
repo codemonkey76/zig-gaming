@@ -7,6 +7,7 @@ const PathIO = @import("path_io.zig").PathIO;
 pub const PathRegistry = struct {
     allocator: std.mem.Allocator,
     paths: std.StringHashMap(PathEntry),
+    base_path: []const u8,
 
     const Self = @This();
 
@@ -18,10 +19,19 @@ pub const PathRegistry = struct {
         }
     };
 
-    pub fn init(allocator: std.mem.Allocator) PathRegistry {
+    pub fn init(allocator: std.mem.Allocator, base_path: []const u8) !PathRegistry {
+        const expanded_path = try expandPath(allocator, base_path);
+        errdefer allocator.free(expanded_path);
+
+        std.fs.cwd().makePath(expanded_path) catch |err| switch (err) {
+            error.PathAlreadyExists => {},
+            else => return err,
+        };
+
         return .{
             .allocator = allocator,
             .paths = std.StringHashMap(PathEntry).init(allocator),
+            .base_path = expanded_path,
         };
     }
 
@@ -32,6 +42,7 @@ pub const PathRegistry = struct {
             entry.value_ptr.deinit(self.allocator);
         }
         self.paths.deinit();
+        self.allocator.free(self.base_path);
     }
 
     fn stripNul(s: []const u8) []const u8 {
@@ -49,11 +60,27 @@ pub const PathRegistry = struct {
         const ext = ".gpath";
         return entry_name[0 .. entry_name.len - ext.len];
     }
+    pub fn expandPath(allocator: std.mem.Allocator, path: []const u8) ![]const u8 {
+        if (path.len > 0 and path[0] == '~') {
+            const home = std.posix.getenv("HOME") orelse return error.HomeNotFound;
 
-    pub fn loadFromDirectory(self: *Self, dir_path: []const u8) !void {
-        var dir = std.fs.cwd().openDir(dir_path, .{ .iterate = true }) catch |err| {
+            if (path.len == 1) {
+                // Just "~"
+                return try allocator.dupe(u8, home);
+            } else if (path[1] == '/') {
+                // "~/something"
+                return try std.fs.path.join(allocator, &.{ home, path[2..] });
+            }
+        }
+
+        // No tilde, return as-is
+        return try allocator.dupe(u8, path);
+    }
+
+    pub fn load(self: *Self) !void {
+        var dir = std.fs.cwd().openDir(self.base_path, .{ .iterate = true }) catch |err| {
             if (err == error.FileNotFound) {
-                std.debug.print("Path directory not found: {s}\n", .{dir_path});
+                std.debug.print("Path directory not found: {s}\n", .{self.base_path});
                 return;
             }
             return err;
@@ -66,7 +93,7 @@ pub const PathRegistry = struct {
             if (!std.mem.endsWith(u8, entry.name, ".gpath")) continue;
 
             var path_buf: [256]u8 = undefined;
-            const full_path = try std.fmt.bufPrint(&path_buf, "{s}/{s}", .{ dir_path, entry.name });
+            const full_path = try std.fmt.bufPrint(&path_buf, "{s}/{s}", .{ self.base_path, entry.name });
 
             const loaded = PathIO.loadPath(self.allocator, full_path) catch |err| {
                 std.debug.print("Failed to load path {s}: {}\n", .{ entry.name, err });
@@ -95,16 +122,21 @@ pub const PathRegistry = struct {
 
             self.allocator.free(loaded.name);
 
+            std.debug.print("Asset Path: {s}\n", .{self.base_path});
             std.debug.print("Loaded path: {s}\n", .{entry.name});
             std.debug.print("Struct: {}\n", .{entry});
         }
     }
 
     pub fn savePath(self: *Self, name: []const u8, anchors: []const AnchorPoint) !void {
-        std.fs.cwd().makePath("assets/paths") catch {};
+        // Ensure the base path exists
+        std.fs.cwd().makePath(self.base_path) catch |err| switch (err) {
+            error.PathAlreadyExists => {},
+            else => return err,
+        };
 
         var filename_buf: [256]u8 = undefined;
-        const filename = try std.fmt.bufPrint(&filename_buf, "assets/paths/{s}.gpath", .{name});
+        const filename = try std.fmt.bufPrint(&filename_buf, "{s}/{s}.gpath", .{ self.base_path, name });
 
         try PathIO.savePath(anchors, name, filename);
 
@@ -148,7 +180,7 @@ pub const PathRegistry = struct {
     pub fn deletePath(self: *Self, name_in: []const u8) !void {
         const name = stripNul(name_in);
         var filename_buf: [256]u8 = undefined;
-        const filename = try std.fmt.bufPrint(&filename_buf, "assets/paths/{s}.gpath", .{name});
+        const filename = try std.fmt.bufPrint(&filename_buf, "{s}/{s}.gpath", .{ self.base_path, name });
         try std.fs.cwd().deleteFile(filename);
 
         if (self.paths.fetchRemove(name)) |kv| {
@@ -162,7 +194,7 @@ pub const PathRegistry = struct {
 
     pub fn renamePath(self: *Self, old_name: []const u8, new_name: []const u8) !void {
         const entry = self.paths.get(old_name) orelse return error.PathNotFound;
-        try self.savePath(new_name, entry.path);
+        try self.savePath(new_name, entry.anchors);
         try self.deletePath(old_name);
     }
 };

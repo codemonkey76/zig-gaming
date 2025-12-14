@@ -2,6 +2,7 @@ pub const models = struct {
     pub const AppModel = @import("models/app.zig").AppModel;
     pub const AppMsg = @import("models/app.zig").AppMsg;
 };
+pub const config = @import("config.zig");
 
 pub const ui = struct {
     const ui_mod = @import("ui/ui.zig");
