@@ -24,13 +24,13 @@ jobs:
 
       - name: Build for Windows x64
         run: |
-          cd curve-editor
+          cd sketch
           zig build -Dtarget=x86_64-windows -Doptimize=ReleaseSmall
 
       - name: Package binaries
         run: |
           mkdir -p releases
-          cp curve-editor/zig-out/bin/curve_editor.exe releases/curve_editor-windows-x64.exe
+          cp sketch/zig-out/bin/sketch.exe releases/sketch-x64.exe
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
