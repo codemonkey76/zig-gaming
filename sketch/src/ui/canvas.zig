@@ -256,15 +256,15 @@ fn mouseToPath(vp: rl.Rectangle, m: rl.Vector2) arcade.Vec2 {
 
 fn drawCurve(vp: rl.Rectangle, anchors: []const arcade.AnchorPoint, control_points: []const arcade.Vec2, selected_anchor: ?usize, r: f32) void {
     // 1) Draw the bezier curve
-    drawBezierCurve(vp, control_points);
+    drawBezierCurve(vp, control_points, r);
 
     // 2) Draw anchor connection lines (simplified control polygon)
-    drawAnchorLines(vp, anchors);
+    drawAnchorLines(vp, anchors, r);
 
     // 3) Draw handles for selected anchor
     if (selected_anchor) |sel_idx| {
         if (sel_idx < anchors.len) {
-            drawHandles(vp, anchors[sel_idx]);
+            drawHandles(vp, anchors[sel_idx], r);
         }
     }
 
@@ -279,34 +279,39 @@ fn drawCurve(vp: rl.Rectangle, anchors: []const arcade.AnchorPoint, control_poin
     }
 }
 
-fn drawAnchorLines(vp: rl.Rectangle, anchors: []const arcade.AnchorPoint) void {
+fn drawAnchorLines(vp: rl.Rectangle, anchors: []const arcade.AnchorPoint, r: f32) void {
     if (anchors.len < 2) return;
 
     for (anchors[0 .. anchors.len - 1], 0..) |a, i| {
         const b = anchors[i + 1];
-        rl.drawLineEx(pathToScreen(vp, a.pos), pathToScreen(vp, b.pos), 1, rl.Color.init(100, 100, 100, 100));
+        rl.drawLineEx(pathToScreen(vp, a.pos), pathToScreen(vp, b.pos), 1 * @min(r / 7.0, 2.0), rl.Color.init(100, 100, 100, 100));
     }
 }
 
-fn drawHandles(vp: rl.Rectangle, anchor: arcade.AnchorPoint) void {
+fn drawHandles(vp: rl.Rectangle, anchor: arcade.AnchorPoint, r: f32) void {
     const anchor_screen = pathToScreen(vp, anchor.pos);
 
     // Draw handle_in
     if (anchor.getHandleInPos()) |handle_pos| {
         const handle_screen = pathToScreen(vp, handle_pos);
-        rl.drawLineEx(anchor_screen, handle_screen, 1, rl.Color.green);
-        rl.drawCircleV(handle_screen, 4, rl.Color.green);
+        rl.drawLineEx(
+            anchor_screen,
+            handle_screen,
+            1 * @min(r / 7.0, 2.0),
+            rl.Color.green,
+        );
+        rl.drawCircleV(handle_screen, 4 * (r / 7.0), rl.Color.green);
     }
 
     // Draw handle_out
     if (anchor.getHandleOutPos()) |handle_pos| {
         const handle_screen = pathToScreen(vp, handle_pos);
-        rl.drawLineEx(anchor_screen, handle_screen, 1, rl.Color.red);
-        rl.drawCircleV(handle_screen, 4, rl.Color.red);
+        rl.drawLineEx(anchor_screen, handle_screen, 1 * @min(r / 7.0, 2.0), rl.Color.red);
+        rl.drawCircleV(handle_screen, 4 * (r / 7.0), rl.Color.red);
     }
 }
 
-fn drawBezierCurve(vp: rl.Rectangle, control_pts: []const arcade.Vec2) void {
+fn drawBezierCurve(vp: rl.Rectangle, control_pts: []const arcade.Vec2, r: f32) void {
     if (control_pts.len < 2) return;
 
     const def = arcade.PathDefinition{ .control_points = control_pts };
@@ -322,7 +327,7 @@ fn drawBezierCurve(vp: rl.Rectangle, control_pts: []const arcade.Vec2) void {
         const sp = pathToScreen(vp, p);
 
         if (prev) |a| {
-            rl.drawLineEx(a, sp, 3, rl.Color.yellow);
+            rl.drawLineEx(a, sp, 3 * @min(r / 7.0, 2.0), rl.Color.yellow);
         }
         prev = sp;
     }

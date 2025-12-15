@@ -48,6 +48,7 @@ pub const AppModel = struct {
     mouse_y: f32 = 0,
     font: rl.Font,
     paths: arcade.PathRegistry,
+    scale_factor: f32 = 1.0,
 
     editor: PathEditor,
     path_list: PathList,
@@ -69,6 +70,8 @@ pub const AppModel = struct {
     const Self = @This();
 
     pub fn init(allocator: std.mem.Allocator, font: rl.Font, config: *const Config) !AppModel {
+        const dpi_scale = rl.getWindowScaleDPI();
+
         const paths = try arcade.PathRegistry.init(allocator, config.asset_path);
 
         var m: AppModel = .{
@@ -78,6 +81,7 @@ pub const AppModel = struct {
             .editor = PathEditor.init(allocator),
             .path_list = PathList.init(allocator),
             .config = config,
+            .scale_factor = dpi_scale.x,
         };
 
         m.reloadAll() catch {};
@@ -163,7 +167,7 @@ pub const AppModel = struct {
             .height = h - 2 * MARGIN,
         };
 
-        const split_root = layout.splitV(root, 52, MARGIN);
+        const split_root = layout.splitV(root, 52 * self.scale_factor, MARGIN);
 
         const selected_mode = if (self.canvas_state.selected_anchor) |idx|
             if (idx < self.editor.points.items.len) self.editor.points.items[idx].mode else null
@@ -192,7 +196,7 @@ pub const AppModel = struct {
             .CycleMode => self.cycleAnchorMode(),
         }
 
-        const split_main = layout.splitH(split_root.rest, 150, MARGIN);
+        const split_main = layout.splitH(split_root.rest, 150 * self.scale_factor, MARGIN);
 
         rl.drawRectangleRec(split_main.left, rl.Color.light_gray);
         rl.drawRectangleLinesEx(split_main.left, 1, rl.Color.gray);
@@ -209,7 +213,12 @@ pub const AppModel = struct {
             self.font,
             self.path_list.items,
             self.selected,
-            .{ .debug_log = self.debug_log },
+            .{
+                .debug_log = self.debug_log,
+                .row_h = 32.0 * self.scale_factor, // Scale row height
+                .font_px = 18.0 * self.scale_factor, // Scale font
+                .pad_x = 10.0 * self.scale_factor, // Scale padding
+            },
         );
 
         try self.handlePathSelection(res);
@@ -223,7 +232,15 @@ pub const AppModel = struct {
                 split_main.rest,
                 self.font,
                 &self.editor.points,
-                .{},
+                .{
+                    .pad = 10.0 * self.scale_factor,
+                    .font_px = 18.0 * self.scale_factor,
+                    .viewport_w = 224 * self.scale_factor,
+                    .viewport_h = 288 * self.scale_factor,
+                    .viewport_margin = 40 * self.scale_factor,
+                    .point_radius = 7.0 * self.scale_factor,
+                    .hit_radius = 10.0 * self.scale_factor,
+                },
             );
             if (c.changed) self.editor.markDirty();
         }
@@ -386,7 +403,7 @@ pub const AppModel = struct {
         switch (self.modal) {
             .None => {},
             .ConfirmSwitch => |m| {
-                const act = ConfirmSwitchModal.draw(&self.ui, self.font);
+                const act = ConfirmSwitchModal.draw(&self.ui, self.font, self.scale_factor);
                 switch (act) {
                     .None => {},
                     .Yes => try self.acceptConfirmAndSwitch(m.target_index),
@@ -412,6 +429,7 @@ pub const AppModel = struct {
                     &self.new_path_len,
                     name_ok,
                     err,
+                    self.scale_factor,
                 );
 
                 switch (r.action) {
@@ -444,6 +462,7 @@ pub const AppModel = struct {
                     &self.new_path_len,
                     name_ok,
                     err,
+                    self.scale_factor,
                 );
 
                 switch (r.action) {
@@ -461,7 +480,12 @@ pub const AppModel = struct {
             .DeletePath => |m| {
                 const name = self.path_list.names[@intCast(m.index)];
 
-                const act = ConfirmDeleteModal.draw(&self.ui, self.font, name);
+                const act = ConfirmDeleteModal.draw(
+                    &self.ui,
+                    self.font,
+                    name,
+                    self.scale_factor,
+                );
                 switch (act) {
                     .None => {},
                     .No => self.modal = .None,
@@ -501,6 +525,7 @@ pub const AppModel = struct {
                     &self.new_path_len,
                     name_ok,
                     err,
+                    self.scale_factor,
                 );
 
                 switch (r.action) {
