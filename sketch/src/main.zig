@@ -27,13 +27,13 @@ pub fn main() !void {
         rl.setTraceLogLevel(.none);
     }
 
-    rl.initWindow(900.0, 600.0, "zig gui");
+    rl.initWindow(900.0, 600.0, "Sketch");
 
     const dpi_scale = rl.getWindowScaleDPI();
 
     const scaled_w = @as(i32, @intFromFloat(900.0 * dpi_scale.x));
     const scaled_h = @as(i32, @intFromFloat(600.0 * dpi_scale.y));
-    rl.initWindow(scaled_w, scaled_h, "zig gui");
+    rl.setWindowSize(scaled_w, scaled_h);
 
     const min_w = @as(i32, @intFromFloat(500.0 * dpi_scale.x));
     const min_h = @as(i32, @intFromFloat(400.0 * dpi_scale.y));
