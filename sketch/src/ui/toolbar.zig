@@ -29,6 +29,7 @@ pub fn draw(
     can_save: bool,
     has_paths: bool,
     selected_anchor_mode: ?arcade.HandleMode,
+    scale: f32,
 ) Action {
     // Toolbar chrome
     rl.drawRectangleRec(bounds, rl.Color.light_gray);
@@ -39,6 +40,7 @@ pub fn draw(
         .ui = ui,
         .flow = &flow,
         .font = font,
+        .scale = scale,
     };
 
     if (toolbarButton(params, Id.toolbar_reload_btn, "Reload", true, .Reload)) |a| return a;
@@ -69,6 +71,7 @@ const Params = struct {
     ui: *Ui,
     font: rl.Font,
     flow: *Flow,
+    scale: f32,
 };
 
 fn toolbarButton(
@@ -78,8 +81,12 @@ fn toolbarButton(
     enabled: bool,
     action: Action,
 ) ?Action {
-    const l = p.flow.nextButton(p.font, 18, label);
-    if (button.button(p.ui, id, l, p.font, label, enabled, .{}).clicked) return action;
+    const l = p.flow.nextButton(p.font, 18 * p.scale, label);
+    if (button.button(p.ui, id, l, p.font, label, enabled, .{
+        .font_px = 18.0 * p.scale,
+        .pad_x = 12.0 * p.scale,
+        .pad_y = 8.0 * p.scale,
+    }).clicked) return action;
 
     return null;
 }

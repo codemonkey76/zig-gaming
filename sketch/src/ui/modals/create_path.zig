@@ -34,10 +34,10 @@ pub fn draw(
     const dlg_w: f32 = 520 * scale;
     const dlg_h: f32 = 220 * scale;
     const dlg = rl.Rectangle{
-        .x = (sw - dlg_w) * 0.5 * scale,
-        .y = (sh - dlg_h) * 0.5 * scale,
-        .width = dlg_w * scale,
-        .height = dlg_h * scale,
+        .x = (sw - dlg_w) * 0.5,
+        .y = (sh - dlg_h) * 0.5,
+        .width = dlg_w,
+        .height = dlg_h,
     };
 
     rl.drawRectangleRec(dlg, rl.Color.light_gray);

@@ -181,6 +181,7 @@ pub const AppModel = struct {
             self.editor.dirty,
             self.path_list.names.len > 0,
             selected_mode,
+            self.scale_factor,
         );
 
         switch (act) {
