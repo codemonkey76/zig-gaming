@@ -1,25 +1,24 @@
 const std = @import("std");
 const engine = @import("engine");
 
+const Starfield = @import("graphics/starfield.zig").Starfield;
+
 pub const GameState = struct {
+    starfield: Starfield,
+
     const Self = @This();
 
     pub fn init(self: *Self, allocator: std.mem.Allocator, ctx: *engine.Context) !void {
-        _ = self;
-        _ = allocator;
-        _ = ctx;
+        self.starfield = try Starfield.init(allocator, ctx, .{});
     }
     pub fn update(self: *Self, ctx: *engine.Context, dt: f32) !void {
-        _ = self;
-        _ = ctx;
-        _ = dt;
+        self.starfield.update(dt, ctx);
     }
     pub fn draw(self: *Self, ctx: *engine.Context) !void {
-        _ = self;
-        _ = ctx;
+        self.starfield.draw(ctx);
     }
     pub fn shutdown(self: *Self, ctx: *engine.Context) void {
-        _ = self;
+        self.starfield.deinit();
         _ = ctx;
     }
 };

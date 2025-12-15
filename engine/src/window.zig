@@ -15,7 +15,6 @@ pub const Window = struct {
             cfg.title,
         );
 
-        if (cfg.vsync) rl.setWindowState(rl.ConfigFlags{ .vsync_hint = true });
         if (cfg.resizable) rl.setWindowState(rl.ConfigFlags{ .window_resizable = true });
         if (cfg.fullscreen) rl.toggleBorderlessWindowed();
         rl.setTargetFPS(@intCast(cfg.target_fps));

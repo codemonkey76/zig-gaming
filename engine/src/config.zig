@@ -4,9 +4,13 @@ pub const Config = struct {
     height: u32 = 720,
     target_fps: u32 = 60,
 
+    // Virtual resolution for game viewport
+    virtual_width: u32 = 224,
+    virtual_height: u32 = 288,
+    ssaa_scale: u32 = 2,
+
     resizable: bool = true,
     fullscreen: bool = false,
-    vsync: bool = true,
 
     asset_root: []const u8 = "assets",
 
