@@ -20,12 +20,12 @@ pub fn main() !void {
     defer cfg.deinit(alloc);
 
     rl.setConfigFlags(.{ .window_resizable = true });
+    const dpi_scale = rl.getWindowScaleDPI();
 
-    rl.initWindow(900, 600, "zig gui");
-    rl.setWindowMinSize(500, 400);
+    rl.initWindow(900 * dpi_scale.x, 600 * dpi_scale.y, "zig gui");
+    rl.setWindowMinSize(500 * dpi_scale.x, 400 * dpi_scale.y);
     defer rl.closeWindow();
 
-    const dpi_scale = rl.getWindowScaleDPI();
     std.debug.print("DPI Scale: {d}x{d}\n", .{ dpi_scale.x, dpi_scale.y });
     const font_size = @as(i32, @intFromFloat(18.0 * dpi_scale.x));
 
