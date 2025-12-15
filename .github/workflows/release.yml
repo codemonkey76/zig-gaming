@@ -49,6 +49,7 @@ jobs:
             zig build -Doptomixr=ReleaseSmall
           else
             zig build -Doptimize=ReleaseSmall -Dtarget=${{ matrix.target }}
+          fi
 
       - name: Package binary
         run: |
