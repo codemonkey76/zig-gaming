@@ -46,7 +46,7 @@ jobs:
         run: |
           cd sketch
           if [ "${{ matrix.target }}" == "x86_64-linux" ]; then
-            zig build -Doptomixr=ReleaseSmall
+            zig build -Doptimize=ReleaseSmall
           else
             zig build -Doptimize=ReleaseSmall -Dtarget=${{ matrix.target }}
           fi
