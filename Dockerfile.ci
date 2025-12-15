@@ -1,0 +1,19 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+WORKDIR /workspace
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  ca-certificates curl xz-utils tar \
+  build-essential pkg-config \
+  libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev \
+  libxi-dev libgl1-mesa-dev \
+  && rm -rf /var/lib/apt/lists/*
+
+#Install zig (same version as your workflow)
+ARG ZIG_VER=0.15.2
+RUN curl -fL "https://ziglang.org/download/${ZIG_VER}/zig-x86_64-linux-${ZIG_VER}.tar.xz" \
+  | tar -xJ -C /opt \
+  && ln -s "/opt/zig-x86_64-linux-${ZIG_VER}/zig" /usr/local/bin/zig
+
+CMD ["bash"]
