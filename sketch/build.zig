@@ -38,6 +38,15 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    if (target.result.os.tag == .windows) {
+        exe.win32_manifest = b.path("windows.manifest");
+        if (optimize == .Debug) {
+            exe.subsystem = .Console; // Keep terminal in debug
+        } else {
+            exe.subsystem = .Windows; // Hide in release
+        }
+    }
+
     b.installArtifact(exe);
 
     const run_step = b.step("run", "Run the app");
