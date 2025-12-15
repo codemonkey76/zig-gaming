@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const sketch = @import("sketch");
 const rl = @import("raylib");
 const config = sketch.config;
@@ -20,10 +21,23 @@ pub fn main() !void {
     defer cfg.deinit(alloc);
 
     rl.setConfigFlags(.{ .window_resizable = true });
+    if (builtin.mode == .Debug) {
+        rl.setTraceLogLevel(.info);
+    } else {
+        rl.setTraceLogLevel(.none);
+    }
+
+    rl.initWindow(900.0, 600.0, "zig gui");
+
     const dpi_scale = rl.getWindowScaleDPI();
 
-    rl.initWindow(900 * dpi_scale.x, 600 * dpi_scale.y, "zig gui");
-    rl.setWindowMinSize(500 * dpi_scale.x, 400 * dpi_scale.y);
+    const scaled_w = @as(i32, @intFromFloat(900.0 * dpi_scale.x));
+    const scaled_h = @as(i32, @intFromFloat(600.0 * dpi_scale.y));
+    rl.initWindow(scaled_w, scaled_h, "zig gui");
+
+    const min_w = @as(i32, @intFromFloat(500.0 * dpi_scale.x));
+    const min_h = @as(i32, @intFromFloat(400.0 * dpi_scale.y));
+    rl.setWindowMinSize(min_w, min_h);
     defer rl.closeWindow();
 
     std.debug.print("DPI Scale: {d}x{d}\n", .{ dpi_scale.x, dpi_scale.y });
