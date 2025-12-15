@@ -26,15 +26,7 @@ pub fn getConfigPath(allocator: std.mem.Allocator, app_name: []const u8) ![]cons
 }
 
 pub fn writeDefaultConfig(path: []const u8, asset_path: []const u8) !void {
-    const builtin = @import("builtin");
-
-    const default_asset_path = if (asset_path.len == 0) blk: {
-        if (builtin.os.tag == .windows) {
-            break :blk "%USERPROFILE%\\assets\\paths";
-        } else {
-            break :blk "~/assets/paths";
-        }
-    } else asset_path;
+    const default_asset_path = if (asset_path.len == 0) "~/assets/paths" else asset_path;
 
     var buffer: [1024]u8 = undefined;
 
