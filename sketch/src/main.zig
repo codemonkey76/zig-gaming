@@ -24,10 +24,15 @@ pub fn main() !void {
     rl.initWindow(900, 600, "zig gui");
     rl.setWindowMinSize(500, 400);
     defer rl.closeWindow();
+
+    const dpi_scale = rl.getWindowScaleDPI();
+    std.debug.print("DPI Scale: {d}x{d}\n", .{ dpi_scale.x, dpi_scale.y });
+    const font_size = @as(i32, @intFromFloat(18.0 * dpi_scale.x));
+
     rl.setTargetFPS(60);
 
     const font_data = @embedFile("assets/fonts/inter/Inter_18pt-Regular.ttf");
-    const font = try rl.loadFontFromMemory(".ttf", font_data, 18, null);
+    const font = try rl.loadFontFromMemory(".ttf", font_data, font_size, null);
     // const font = try rl.loadFontEx("assets/fonts/inter/Inter_18pt-Regular.ttf", 18, null);
     rl.setTextureFilter(font.texture, rl.TextureFilter.point);
 
