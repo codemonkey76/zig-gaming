@@ -26,7 +26,9 @@ pub fn main() !void {
     defer rl.closeWindow();
     rl.setTargetFPS(60);
 
-    const font = try rl.loadFontEx("assets/fonts/inter/Inter_18pt-Regular.ttf", 18, null);
+    const font_data = @embedFile("assets/fonts/inter/Inter_18pt-Regular.ttf");
+    const font = try rl.loadFontFromMemory(".ttf", font_data, 18, null);
+    // const font = try rl.loadFontEx("assets/fonts/inter/Inter_18pt-Regular.ttf", 18, null);
     rl.setTextureFilter(font.texture, rl.TextureFilter.point);
 
     var model = try sketch.models.AppModel.init(alloc, font, &cfg);
