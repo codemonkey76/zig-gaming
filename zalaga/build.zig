@@ -42,6 +42,15 @@ pub fn build(b: *std.Build) void {
         }
     }
 
+    // Install assets directory alongside executable
+    const install_assets = b.addInstallDirectory(.{
+        .source_dir = b.path("assets"),
+        .install_dir = .bin,
+        .install_subdir = "assets",
+    });
+
+    exe.step.dependOn(&install_assets.step);
+
     b.installArtifact(exe);
 
     const run_step = b.step("run", "Run the app");
