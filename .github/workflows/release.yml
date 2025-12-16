@@ -64,7 +64,7 @@ jobs:
             cp zalaga/zig-out/bin/zalaga.exe releases/${{ matrix.zalaga_artifact }}
           else
             cp sketch/zig-out/bin/sketch releases/${{ matrix.sketch_artifact }}
-            cp sketch/zig-out/bin/zalaga releases/${{ matrix.zalaga_artifact }}
+            cp zalaga/zig-out/bin/zalaga releases/${{ matrix.zalaga_artifact }}
           fi
 
       - name: Upload sketch artifact
