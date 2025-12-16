@@ -8,6 +8,7 @@ pub const Config = struct {
     virtual_width: u32 = 224,
     virtual_height: u32 = 288,
     ssaa_scale: u32 = 2,
+    dpi_scale: u32 = 1,
 
     resizable: bool = true,
     fullscreen: bool = false,

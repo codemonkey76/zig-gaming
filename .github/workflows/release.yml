@@ -13,10 +13,12 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-linux
-            artifact_name: sketch-linux-x64
+            sketch_artifact: sketch-linux-x64
+            zalaga_artifact: zalaga-linux-x64
           - os: ubuntu-latest
             target: x86_64-windows
-            artifact_name: sketch-windows-x64.exe
+            sketch_artifact: sketch-windows-x64.exe
+            zalaga_artifact: zalaga-linx-x64.exe
 
     runs-on: ${{ matrix.os }}
 
@@ -36,7 +38,7 @@ jobs:
         with:
           version: 0.15.2
 
-      - name: Build for ${{ matrix.target }}
+      - name: Build for sketch for ${{ matrix.target }}
         run: |
           cd sketch
           if [ "${{ matrix.target }}" == "x86_64-linux" ]; then
@@ -45,20 +47,37 @@ jobs:
             zig build -Doptimize=ReleaseSmall -Dtarget=${{ matrix.target }}
           fi
 
-      - name: Package binary
+      - name: Build for zalaga for ${{ matrix.target }}
+        run: |
+          cd zalaga
+          if [ "${{ matrix.target }}" == "x86_64-linux" ]; then
+            zig build -Doptimize=ReleaseSmall
+          else
+            zig build -Doptimize=ReleaseSmall -Dtarget=${{ matrix.target }}
+          fi
+
+      - name: Package binaries
         run: |
           mkdir -p releases
           if [ "${{ matrix.target }}" == "x86_64-windows" ]; then
-            cp sketch/zig-out/bin/sketch.exe releases/${{ matrix.artifact_name }}
+            cp sketch/zig-out/bin/sketch.exe releases/${{ matrix.sketch_artifact }}
+            cp zalaga/zig-out/bin/zalaga.exe releases/${{ matrix.zalaga_artifact }}
           else
-            cp sketch/zig-out/bin/sketch releases/${{ matrix.artifact_name }}
+            cp sketch/zig-out/bin/sketch releases/${{ matrix.sketch_artifact }}
+            cp sketch/zig-out/bin/zalaga releases/${{ matrix.zalaga_artifact }}
           fi
 
-      - name: Upload artifact
+      - name: Upload sketch artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: releases/${{ matrix.artifact_name }}
+          name: ${{ matrix.sketch_artifact }}
+          path: releases/${{ matrix.sketch_artifact }}
+
+      - name: Upload zalaga artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.zalaga_artifact }}
+          path: releases/${{ matrix.zalaga_artifact }}
 
   release:
     needs: build
