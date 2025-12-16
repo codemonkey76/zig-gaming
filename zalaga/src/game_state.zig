@@ -11,7 +11,7 @@ pub const GameState = struct {
     const Self = @This();
 
     pub fn init(self: *Self, allocator: std.mem.Allocator, ctx: *engine.Context) !void {
-        self.assets = try Assets.load(allocator, ctx);
+        self.assets = try Assets.init(allocator, ctx);
         self.starfield = try Starfield.init(allocator, ctx, .{});
     }
     pub fn update(self: *Self, ctx: *engine.Context, dt: f32) !void {
