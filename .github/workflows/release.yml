@@ -18,7 +18,7 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-windows
             sketch_artifact: sketch-windows-x64.exe
-            zalaga_artifact: zalaga-linx-x64.exe
+            zalaga_artifact: zalaga-windows-x64.exe
 
     runs-on: ${{ matrix.os }}
 
@@ -56,17 +56,34 @@ jobs:
             zig build -Doptimize=ReleaseSmall -Dtarget=${{ matrix.target }}
           fi
 
-      - name: Package binaries
+      - name: Package sketch
         run: |
           mkdir -p releases
           if [ "${{ matrix.target }}" == "x86_64-windows" ]; then
             cp sketch/zig-out/bin/sketch.exe releases/${{ matrix.sketch_artifact }}
-            cp zalaga/zig-out/bin/zalaga.exe releases/${{ matrix.zalaga_artifact }}
           else
             cp sketch/zig-out/bin/sketch releases/${{ matrix.sketch_artifact }}
-            cp zalaga/zig-out/bin/zalaga releases/${{ matrix.zalaga_artifact }}
           fi
 
+      - name: Package zalaga
+        run: |
+        mkdir -p releases/zalaga-temp
+        if [ "${{ matrix.target }}" == "x86_64-windows" ]; then
+          cp zalaga/zig-out/bin/zalaga.exe releases/zalaga-temp/
+        else
+          cp zalaga/zig-out/bin/zalaga releases/zalaga-temp/
+        fi
+        # Copy assets - zalaga will need this
+        if [ -d "zalaga/zig-out/bin/assets" ]; then
+          cp -r zalaga/zig-out/bin/assets releases/zalaga-temp/
+        fi
+        cd releases/zalaga-temp
+        if [ "${{ matrix.target }}" == "x86_64-windows" ]; then
+          zip -r ../${{ matrix.zalaga_artifact }}.zip .
+        else
+          tar -czf ../${{ matrix.zalaga_artifact }}.tar.gz .
+        fi
+        cd ../..
       - name: Upload sketch artifact
         uses: actions/upload-artifact@v4
         with:
@@ -77,7 +94,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.zalaga_artifact }}
-          path: releases/${{ matrix.zalaga_artifact }}
+          path: |
+            releases/${{ matrix.zalaga_artifact }}.zip
+            releases/${{ matrix.zalaga_artifact }}.tar.gz
 
   release:
     needs: build

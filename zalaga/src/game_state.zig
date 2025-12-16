@@ -2,13 +2,16 @@ const std = @import("std");
 const engine = @import("engine");
 
 const Starfield = @import("graphics/starfield.zig").Starfield;
+const Assets = @import("assets/assets.zig").Assets;
 
 pub const GameState = struct {
     starfield: Starfield,
+    assets: Assets,
 
     const Self = @This();
 
     pub fn init(self: *Self, allocator: std.mem.Allocator, ctx: *engine.Context) !void {
+        self.assets = try Assets.load(allocator, ctx);
         self.starfield = try Starfield.init(allocator, ctx, .{});
     }
     pub fn update(self: *Self, ctx: *engine.Context, dt: f32) !void {
@@ -19,6 +22,6 @@ pub const GameState = struct {
     }
     pub fn shutdown(self: *Self, ctx: *engine.Context) void {
         self.starfield.deinit();
-        _ = ctx;
+        self.assets.deinit(ctx);
     }
 };
