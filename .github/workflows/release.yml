@@ -67,23 +67,23 @@ jobs:
 
       - name: Package zalaga
         run: |
-        mkdir -p releases/zalaga-temp
-        if [ "${{ matrix.target }}" == "x86_64-windows" ]; then
-          cp zalaga/zig-out/bin/zalaga.exe releases/zalaga-temp/
-        else
-          cp zalaga/zig-out/bin/zalaga releases/zalaga-temp/
-        fi
-        # Copy assets - zalaga will need this
-        if [ -d "zalaga/zig-out/bin/assets" ]; then
-          cp -r zalaga/zig-out/bin/assets releases/zalaga-temp/
-        fi
-        cd releases/zalaga-temp
-        if [ "${{ matrix.target }}" == "x86_64-windows" ]; then
-          zip -r ../${{ matrix.zalaga_artifact }}.zip .
-        else
-          tar -czf ../${{ matrix.zalaga_artifact }}.tar.gz .
-        fi
-        cd ../..
+          mkdir -p releases/zalaga-temp
+          if [ "${{ matrix.target }}" == "x86_64-windows" ]; then
+            cp zalaga/zig-out/bin/zalaga.exe releases/zalaga-temp/
+          else
+            cp zalaga/zig-out/bin/zalaga releases/zalaga-temp/
+          fi
+          # Copy assets - zalaga will need this
+          if [ -d "zalaga/zig-out/bin/assets" ]; then
+            cp -r zalaga/zig-out/bin/assets releases/zalaga-temp/
+          fi
+          cd releases/zalaga-temp
+          if [ "${{ matrix.target }}" == "x86_64-windows" ]; then
+            zip -r ../${{ matrix.zalaga_artifact }}.zip .
+          else
+            tar -czf ../${{ matrix.zalaga_artifact }}.tar.gz .
+          fi
+          cd ../..
       - name: Upload sketch artifact
         uses: actions/upload-artifact@v4
         with:
